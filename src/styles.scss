@@ -1,4 +1,7 @@
 @import '@angular/material/prebuilt-themes/cyan-orange.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* Definir variables del tema */
 html {
