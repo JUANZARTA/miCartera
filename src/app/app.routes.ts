@@ -1,3 +1,16 @@
 import { Routes } from '@angular/router';
 
-export const routes: Routes = [];
+// Importamos los componentes Standalone generados
+import { HomeComponent } from './features/dashboard/home/home.component';
+import { TransactionsComponent } from './features/dashboard/transactions/transactions.component';
+import { WalletsComponent } from './features/dashboard/wallets/wallets.component';
+import { LoginComponent } from './features/auth/login/login.component';
+import { RegisterComponent } from './features/auth/register/register.component';
+
+export const routes: Routes = [
+  { path: '', component: HomeComponent }, // Pantalla de inicio
+  { path: 'transactions', component: TransactionsComponent }, // Transacciones
+  { path: 'wallets', component: WalletsComponent }, // Billeteras
+  { path: 'login', component: LoginComponent }, // Login
+  { path: 'register', component: RegisterComponent }, // Registro
+];

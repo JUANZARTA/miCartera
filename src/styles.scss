@@ -1,0 +1,109 @@
+@import '@angular/material/prebuilt-themes/cyan-orange.css';
+
+/* Definir variables del tema */
+html {
+  --mat-sys-background: #101414;
+  --mat-sys-error: #ffb4ab;
+  --mat-sys-error-container: #93000a;
+  --mat-sys-inverse-on-surface: #2d3131;
+  --mat-sys-inverse-primary: #006a6a;
+  --mat-sys-inverse-surface: #e0e3e2;
+  --mat-sys-on-background: #e0e3e2;
+  --mat-sys-on-error: #690005;
+  --mat-sys-on-error-container: #ffdad6;
+  --mat-sys-on-primary: #003737;
+  --mat-sys-on-primary-container: #00fbfb;
+  --mat-sys-on-primary-fixed: #002020;
+  --mat-sys-on-primary-fixed-variant: #004f4f;
+  --mat-sys-on-secondary: #1b3534;
+  --mat-sys-on-secondary-container: #cce8e7;
+  --mat-sys-on-secondary-fixed: #051f1f;
+  --mat-sys-on-secondary-fixed-variant: #324b4b;
+  --mat-sys-on-surface: #e0e3e2;
+  --mat-sys-on-surface-variant: #dae5e4;
+  --mat-sys-on-tertiary: #502400;
+  --mat-sys-on-tertiary-container: #ffdcc7;
+  --mat-sys-on-tertiary-fixed: #311300;
+  --mat-sys-on-tertiary-fixed-variant: #723600;
+  --mat-sys-outline: #889392;
+  --mat-sys-outline-variant: #3f4948;
+  --mat-sys-primary: #00dddd;
+  --mat-sys-primary-container: #004f4f;
+  --mat-sys-primary-fixed: #00fbfb;
+  --mat-sys-primary-fixed-dim: #00dddd;
+  --mat-sys-scrim: #000000;
+  --mat-sys-secondary: #b0cccb;
+  --mat-sys-secondary-container: #324b4b;
+  --mat-sys-secondary-fixed: #cce8e7;
+  --mat-sys-secondary-fixed-dim: #b0cccb;
+  --mat-sys-shadow: #000000;
+  --mat-sys-surface: #101414;
+  --mat-sys-surface-bright: #363a39;
+  --mat-sys-surface-container: #1c2020;
+  --mat-sys-surface-container-high: #272b2a;
+  --mat-sys-surface-container-highest: #363a39;
+  --mat-sys-surface-container-low: #191c1c;
+  --mat-sys-surface-container-lowest: #0b0f0e;
+  --mat-sys-surface-dim: #101414;
+  --mat-sys-surface-tint: #00dddd;
+  --mat-sys-surface-variant: #3f4948;
+  --mat-sys-tertiary: #ffb787;
+  --mat-sys-tertiary-container: #723600;
+  --mat-sys-tertiary-fixed: #ffdcc7;
+  --mat-sys-tertiary-fixed-dim: #ffb787;
+  --mat-sys-neutral-variant20: #293232;
+  --mat-sys-neutral10: #191c1c;
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: var(--mat-sys-background);
+  color: var(--mat-sys-on-background);
+}
+
+/* Ajustar el sidenav */
+.mat-sidenav-container {
+  height: 100vh;
+}
+
+.mat-sidenav {
+  background-color: var(--mat-sys-primary-container)!important;
+  color: var(--mat-sys-on-primary);
+}
+
+/* Colores para la toolbar */
+.mat-toolbar {
+  background-color: var(--mat-sys-primary-container)!important;
+  color: var(--mat-sys-on-primary);
+}
+
+/* Colores de los items de la lista */
+.mat-list-item {
+  color: var(--mat-sys-on-surface);
+}
+
+.mat-list-item:hover {
+  background-color: var(--mat-sys-primary-hover);
+}
+
+
+/* Estilo para la barra de navegación y los elementos dentro de ella */
+.mat-toolbar {
+  display: flex;
+  align-items: center; /* Centrar verticalmente los elementos */
+  justify-content: space-between; /* Distribuir el espacio entre los elementos */
+
+  background-color: var(--mat-sys-primary-container);  // Cambiar a --mat-sys-primary-container
+  color: var(--mat-sys-on-primary);  // Para que el texto se vea bien sobre el fondo
+}
+
+
+/* Alinear los botones a la derecha */
+.spacer {
+  flex: 1 1 auto; /* Crear espacio flexible entre el título y los botones */
+}
+
+button.mat-button {
+  margin-left: 10px; /* Espacio entre los botones */
+}
