@@ -5,17 +5,7 @@
   "projects": {
     "mi-proyecto-angular": {
       "projectType": "application",
-      "schematics": {
-        "@schematics/angular:component": {
-          "standalone": false
-        },
-        "@schematics/angular:directive": {
-          "standalone": false
-        },
-        "@schematics/angular:pipe": {
-          "standalone": false
-        }
-      },
+      "schematics": {},
       "root": "",
       "sourceRoot": "src",
       "prefix": "app",
@@ -107,8 +97,5 @@
         }
       }
     }
-  },
-  "cli": {
-    "analytics": "4aabcc8e-90c1-403f-918e-0176b415f289"
   }
 }
