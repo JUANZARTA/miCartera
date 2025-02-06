@@ -1,37 +1,32 @@
-<p>expenses works!</p>
+<p>Tabla de Gastos</p>
 
-<div class="bg-blue-500 text-white p-4">
-    ¡Tailwind está funcionando!
-  </div>
-  
 <div class="overflow-x-auto shadow-lg rounded-lg">
-    <table class="min-w-full bg-white border border-gray-200">
-      <thead class="bg-gray-800 text-white">
-        <tr>
-          <th class="px-6 py-3 text-left text-sm font-semibold">N</th>
-          <th class="px-6 py-3 text-left text-sm font-semibold">Descripción</th>
-          <th class="px-6 py-3 text-left text-sm font-semibold">Categoría</th>
-          <th class="px-6 py-3 text-left text-sm font-semibold">Valor</th>
-          <th class="px-6 py-3 text-left text-sm font-semibold">Estimación</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr class="border-b hover:bg-gray-50">
-          <td class="px-6 py-4 text-sm text-gray-700">1</td>
-          <td class="px-6 py-4 text-sm text-gray-700">Compra de materiales</td>
-          <td class="px-6 py-4 text-sm text-gray-700">Materiales</td>
-          <td class="px-6 py-4 text-sm text-gray-700">$500</td>
-          <td class="px-6 py-4 text-sm text-gray-700">$450</td>
-        </tr>
-        <tr class="border-b hover:bg-gray-50">
-          <td class="px-6 py-4 text-sm text-gray-700">2</td>
-          <td class="px-6 py-4 text-sm text-gray-700">Pago de servicios</td>
-          <td class="px-6 py-4 text-sm text-gray-700">Servicios</td>
-          <td class="px-6 py-4 text-sm text-gray-700">$200</td>
-          <td class="px-6 py-4 text-sm text-gray-700">$180</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-  
-  
+  <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+    <thead class="bg-gradient-to-r from-blue-900 to-blue-700 text-white">
+      <tr>
+        <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide">N</th>
+        <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide">Descripción</th>
+        <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide">Categoría</th>
+        <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide">Valor</th>
+        <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide">Estimación</th>
+      </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-gray-200">
+      <tr class="hover:bg-gray-100 transition duration-300 ease-in-out">
+        <td class="px-6 py-4 text-sm font-medium text-gray-900">1</td>
+        <td class="px-6 py-4 text-sm text-gray-900">Recibo de Internet</td>
+        <td class="px-6 py-4 text-sm text-gray-900">Servicios</td>
+        <td class="px-6 py-4 text-sm font-semibold text-green-600">$75,000</td>
+        <td class="px-6 py-4 text-sm font-semibold text-gray-600">$75,000</td>
+      </tr>
+      <tr class="bg-gray-50 hover:bg-gray-100 transition duration-300 ease-in-out">
+        <td class="px-6 py-4 text-sm font-medium text-gray-900">2</td>
+        <td class="px-6 py-4 text-sm text-gray-900">Recibo de Energía</td>
+        <td class="px-6 py-4 text-sm text-gray-900">Servicios</td>
+        <td class="px-6 py-4 text-sm font-semibold text-green-600">$50,000</td>
+        <td class="px-6 py-4 text-sm font-semibold text-gray-600">$40,000</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
