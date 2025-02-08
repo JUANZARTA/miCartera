@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "mi-proyecto-angular": {
+    "ng-menu-dashboard": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -13,7 +13,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/mi-proyecto-angular",
+            "outputPath": "dist/ng-menu-dashboard",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
@@ -27,8 +27,7 @@
               }
             ],
             "styles": [
-              "@angular/material/prebuilt-themes/cyan-orange.css",
-              "src/styles.scss"
+              "src/styles.css"
             ],
             "scripts": [],
             "server": "src/main.server.ts",
@@ -65,10 +64,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "mi-proyecto-angular:build:production"
+              "buildTarget": "ng-menu-dashboard:build:production"
             },
             "development": {
-              "buildTarget": "mi-proyecto-angular:build:development"
+              "buildTarget": "ng-menu-dashboard:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -91,7 +90,6 @@
               }
             ],
             "styles": [
-              "@angular/material/prebuilt-themes/cyan-orange.css",
               "src/styles.css"
             ],
             "scripts": []
@@ -101,6 +99,6 @@
     }
   },
   "cli": {
-    "analytics": "3d1e8dcc-5b24-4fec-8a46-3e78ae775f48"
+    "analytics": "24f983b5-e7e9-489c-9116-273e77b916d1"
   }
 }
