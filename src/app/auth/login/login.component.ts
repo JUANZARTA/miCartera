@@ -13,6 +13,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 export default class LoginComponent {
   loginForm: FormGroup;
   showModal = false;
+  showSuccessModal = false;
   errorMessage = '';
 
   // 🔹 Usuario quemado
@@ -43,20 +44,29 @@ export default class LoginComponent {
         this.showErrorModal('Correo incorrecto. Intenta de nuevo.');
       } else if (password !== this.user.password) {
         this.showErrorModal('Contraseña incorrecta. Intenta de nuevo.');
-      } else {;
-        this.router.navigate(['/home']); // ✅ Redirige al Home
+      } else {
+        this.showWelcomeModal();
       }
     }
   }
 
-  // 🔹 Mostrar el modal con mensaje de error
+  // 🔹 Mostrar el modal de error
   showErrorModal(message: string) {
     this.errorMessage = message;
     this.showModal = true;
   }
 
-  // 🔹 Cerrar el modal
+  // 🔹 Cerrar el modal de error
   closeModal() {
     this.showModal = false;
+  }
+
+  // 🔹 Mostrar el modal de bienvenida y redirigir en 1 segundo
+  showWelcomeModal() {
+    this.showSuccessModal = true;
+    setTimeout(() => {
+      this.showSuccessModal = false;
+      this.router.navigate(['/home']); // ✅ Redirige al Home después de 1 segundo
+    }, 1000);
   }
 }

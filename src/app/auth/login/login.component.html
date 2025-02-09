@@ -39,14 +39,43 @@
   </div>
 </div>
 
-<!-- 🔹 MODAL PERSONALIZADO -->
+<!-- 🔹 MODAL DE ERROR -->
 <div *ngIf="showModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-  <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
-    <h3 class="text-xl font-bold text-gray-800 mb-4">❌ Error en Inicio de Sesión</h3>
-    <p class="text-gray-600">{{ errorMessage }}</p>
+  <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full relative">
+
+    <!-- Ícono de Error -->
+    <div class="flex justify-center mb-4">
+      <div class="w-16 h-16 flex items-center justify-center bg-red-100 rounded-full">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3-10a1 1 0 00-1.414-1.414L10 8.586 8.414 7A1 1 0 007 8.414L8.586 10 7 11.586A1 1 0 108.414 13L10 11.414l1.586 1.586A1 1 0 1013 11.586L11.414 10 13 8.414A1 1 0 0013 8z" clip-rule="evenodd"/>
+        </svg>
+      </div>
+    </div>
+
+    <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Error en Inicio de Sesión</h3>
+    <p class="text-gray-600 text-center">{{ errorMessage }}</p>
 
     <button (click)="closeModal()" class="mt-4 w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition">
       Cerrar
     </button>
+
+  </div>
+</div>
+
+<!-- ✅ MODAL DE BIENVENIDA -->
+<div *ngIf="showSuccessModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+  <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full relative">
+
+    <!-- Ícono de Éxito -->
+    <div class="flex justify-center mb-4">
+      <div class="w-16 h-16 flex items-center justify-center bg-green-100 rounded-full">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 000 16zm3-10l-4 4-2-2a1 1 0 00-1.414 1.414L10 14l5-5a1 1 0 00-1.414-1.414z" clip-rule="evenodd"/>
+        </svg>
+      </div>
+    </div>
+
+    <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">¡Bienvenido!</h3>
+
   </div>
 </div>
