@@ -6,8 +6,8 @@ export const routes: Routes = [
         loadComponent: () => import('./shared/components/layout/layout.component'),
         children: [
             {
-                path: 'dashboard',
-                loadComponent: () => import('./business/dashboard/dashboard.component')
+                path: 'home',
+                loadComponent: () => import('./business/home/home.component')
             },
             {
                 path: 'expense',
