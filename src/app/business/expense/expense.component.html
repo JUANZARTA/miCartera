@@ -1,1 +1,63 @@
-<p>expense works!</p>
+<div class="mb-6 grid grid-cols-1 xl:grid-cols-2 gap-6">
+  <div class="relative flex flex-col bg-white rounded-xl shadow-lg overflow-hidden xl:col-span-2 border border-gray-200">
+
+    <!-- 🔹 Encabezado -->
+    <div class="flex items-center justify-between p-6 bg-gradient-to-r from-red-600 to-orange-500 text-white rounded-t-xl shadow-md">
+      <div>
+        <h6 class="text-xl font-bold tracking-wide">Tabla de Gastos</h6>
+        <p class="text-sm flex items-center gap-2 opacity-90">
+          <strong>Mes de Enero</strong>
+        </p>
+      </div>
+      <button class="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition duration-300">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="h-6 w-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- 🔹 Tabla -->
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[640px] border-collapse">
+        <thead class="bg-gray-100">
+          <tr class="border-b">
+            <th class="py-4 px-6 text-left text-xs font-semibold uppercase text-gray-600">Descripción</th>
+            <th class="py-4 px-6 text-left text-xs font-semibold uppercase text-gray-600">Categoría</th>
+            <th class="py-4 px-6 text-right text-xs font-semibold uppercase text-gray-600">Valor</th>
+            <th class="py-4 px-6 text-right text-xs font-semibold uppercase text-gray-600">Estimación</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- 🔹 Generar filas dinámicamente con *ngFor -->
+          <tr *ngFor="let expense of expenses"
+              [ngClass]="{ 'bg-red-100 text-red-700': isOverBudget(expense) }"
+              class="border-b transition duration-300 hover:bg-gray-50">
+            <td class="py-4 px-6 font-semibold">{{ expense.description }}</td>
+            <td class="py-4 px-6">
+              <span class="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">{{ expense.category }}</span>
+            </td>
+            <td class="py-4 px-6 text-right font-semibold">
+              ${{ formatCurrency(expense.value) }}
+            </td>
+            <td class="py-4 px-6 text-right font-semibold">
+              ${{ formatCurrency(expense.estimated) }}
+            </td>
+          </tr>
+
+          <!-- 🔹 Total Final (Calculado dinámicamente) -->
+          <tr class="bg-red-50 font-bold text-red-900">
+            <td class="py-4 px-6 text-left">Total</td>
+            <td class="py-4 px-6"></td>
+            <td class="py-4 px-6 text-right">
+              ${{ formatCurrency(getTotalExpenses()) }}
+            </td>
+            <td class="py-4 px-6 text-right">
+              ${{ formatCurrency(getTotalEstimated()) }}
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
