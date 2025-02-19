@@ -1,32 +1,48 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule], // ✅ Importamos RouterModule para navegación
+  imports: [CommonModule, RouterModule, ReactiveFormsModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
-export default class LoginComponent {
+export default class LoginComponent implements OnInit {
+  private http = inject(HttpClient);
+  private router = inject(Router);
+  private fb = inject(FormBuilder);
+
   loginForm: FormGroup;
   showModal = false;
   showSuccessModal = false;
   errorMessage = '';
+  users: any[] = []; // Lista de usuarios obtenidos de `data.json`
 
-  // 🔹 Usuario quemado
-  private user = {
-    name: 'Kmilo Zarta',
-    email: 'juancamilozartacampo@gmail.com',
-    password: '000000'
-  };
-
-  constructor(private fb: FormBuilder, private router: Router) {
+  constructor() {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]]
+    });
+  }
+
+  ngOnInit() {
+    this.loadUsers();
+  }
+
+  // 🔹 Cargar los usuarios desde `data.json`
+  loadUsers() {
+    this.http.get<any>('/assets/data.json').subscribe({
+      next: (data) => {
+        console.log('✅ Usuarios cargados:', data.usuarios);
+        this.users = data.usuarios;
+      },
+      error: (err) => {
+        console.error('❌ Error al cargar usuarios:', err);
+      }
     });
   }
 
@@ -39,11 +55,12 @@ export default class LoginComponent {
   onSubmit() {
     if (this.loginForm.valid) {
       const { email, password } = this.loginForm.value;
+      
+      // Buscar si el usuario existe en `data.json`
+      const userFound = this.users.find(user => user.email === email && user.password === password);
 
-      if (email !== this.user.email) {
-        this.showErrorModal('Correo incorrecto. Intenta de nuevo.');
-      } else if (password !== this.user.password) {
-        this.showErrorModal('Contraseña incorrecta. Intenta de nuevo.');
+      if (!userFound) {
+        this.showErrorModal('Correo o contraseña incorrectos. Intenta de nuevo.');
       } else {
         this.showWelcomeModal();
       }
