@@ -1,17 +1,23 @@
 <div class="mb-6 grid grid-cols-1 xl:grid-cols-2 gap-6">
-  <div class="relative flex flex-col bg-white rounded-xl shadow-lg overflow-hidden xl:col-span-2 border border-gray-200">
+  <div
+    class="relative flex flex-col bg-white rounded-xl shadow-lg overflow-hidden xl:col-span-2 border border-gray-200">
 
     <!-- 🔹 Encabezado -->
-    <div class="flex items-center justify-between p-6 bg-gradient-to-r from-green-600 to-teal-500 text-white rounded-t-xl shadow-md">
+    <div
+      class="flex items-center justify-between p-6 bg-gradient-to-r from-green-600 to-teal-500 text-white rounded-t-xl shadow-md">
       <div>
         <h6 class="text-xl font-bold tracking-wide">Mi Cartera</h6>
         <p class="text-sm flex items-center gap-2 opacity-90">
           <strong>Estado Actual</strong>
         </p>
       </div>
-      <button class="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition duration-300">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="h-6 w-6">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z"></path>
+      <button
+        class="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition duration-300">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"
+          class="h-6 w-6">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z">
+          </path>
         </svg>
       </button>
     </div>
@@ -28,9 +34,9 @@
         <tbody>
           <!-- 🔹 Generar filas dinámicamente con *ngFor -->
           <tr *ngFor="let account of wallet" class="border-b transition duration-300 hover:bg-gray-50">
-            <td class="py-4 px-6 font-semibold">{{ account.name }}</td>
+            <td class="py-4 px-6 font-semibold">{{ account.tipo }}</td>
             <td class="py-4 px-6 text-right text-green-600 font-semibold">
-              ${{ formatCurrency(account.value) }}
+              ${{ formatCurrency(account.valor) }}
             </td>
           </tr>
 

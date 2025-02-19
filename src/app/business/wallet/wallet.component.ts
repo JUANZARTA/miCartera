@@ -1,28 +1,41 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-wallet',
   standalone: true,
-  imports: [CommonModule], // ✅ Importamos CommonModule para habilitar *ngFor y pipes
+  imports: [CommonModule],
   templateUrl: './wallet.component.html',
   styleUrls: ['./wallet.component.css'],
-  providers: [DecimalPipe] // ✅ Agregamos DecimalPipe para formatear valores
+  providers: [DecimalPipe]
 })
-export default class WalletComponent {
-  constructor(private decimalPipe: DecimalPipe) {}
+export default class WalletComponent implements OnInit {
+  private http = inject(HttpClient);
+  private decimalPipe = inject(DecimalPipe);
 
-  // 🔹 Lista de cuentas con su respectivo saldo
-  wallet = [
-    { name: 'Efectivo', value: 500000 },
-    { name: 'Bancolombia', value: 1200000 },
-    { name: 'Daviplata', value: 300000 },
-    { name: 'Nequi', value: 450000 }
-  ];
+  wallet: any[] = [];
+
+  ngOnInit() {
+    this.loadWallet();
+  }
+
+  // 🔹 Cargar los datos de la cartera desde `data.json`
+  loadWallet() {
+    this.http.get<any>('/assets/data.json').subscribe({
+      next: (data) => {
+        console.log('✅ JSON de cartera cargado:', data);
+        this.wallet = data.cartera;
+      },
+      error: (err) => {
+        console.error('❌ Error al cargar JSON de cartera:', err);
+      }
+    });
+  }
 
   // 🔹 Método para calcular el total disponible
   getTotalWallet(): number {
-    return this.wallet.reduce((sum, account) => sum + account.value, 0);
+    return this.wallet.reduce((sum, account) => sum + account.valor, 0);
   }
 
   // 🔹 Método para formatear valores de moneda manualmente
