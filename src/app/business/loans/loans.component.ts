@@ -1,29 +1,43 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-loans',
   standalone: true,
-  imports: [CommonModule], // ✅ Importamos CommonModule para habilitar *ngFor y pipes
+  imports: [CommonModule],
   templateUrl: './loans.component.html',
   styleUrls: ['./loans.component.css'],
-  providers: [DecimalPipe] // ✅ Agregamos DecimalPipe para formatear valores
+  providers: [DecimalPipe]
 })
-export default class LoansComponent {
-  constructor(private decimalPipe: DecimalPipe) {}
+export default class LoansComponent implements OnInit {
+  private http = inject(HttpClient);
+  private decimalPipe = inject(DecimalPipe);
 
-  // 🔹 Lista de préstamos con su respectiva información
-  loans = [
-    { debtor: 'James Muñoz', loanDate: '2024-01-31', paymentDate: '2024-02-5', value: 31500, paid: false },
-    { debtor: 'María González', loanDate: '2024-02-10', paymentDate: '2024-04-10', value: 750000, paid: true },
-    { debtor: 'Carlos López', loanDate: '2024-03-05', paymentDate: '2024-05-05', value: 300000, paid: false }
-  ];
+  loans: any[] = [];
 
-  // 🔹 Método para calcular el total de préstamos pendientes
+  ngOnInit() {
+    this.loadLoans();
+  }
+
+  // 🔹 Cargar los préstamos desde `data.json`
+  loadLoans() {
+    this.http.get<any>('/assets/data.json').subscribe({
+      next: (data) => {
+        console.log('✅ JSON de préstamos cargado:', data);
+        this.loans = data.prestamos;
+      },
+      error: (err) => {
+        console.error('❌ Error al cargar JSON de préstamos:', err);
+      }
+    });
+  }
+
+  // 🔹 Método para calcular el total de préstamos PENDIENTES
   getTotalPendingLoans(): number {
     return this.loans
-      .filter(loan => !loan.paid) // ✅ Solo sumamos préstamos NO pagados
-      .reduce((sum, loan) => sum + loan.value, 0);
+      .filter(loan => loan.estado === 'Pendiente') // ✅ Solo sumamos los préstamos pendientes
+      .reduce((sum, loan) => sum + loan.valor, 0);
   }
 
   // 🔹 Método para formatear valores de moneda manualmente
@@ -33,6 +47,6 @@ export default class LoansComponent {
 
   // 🔹 Método para cambiar el estado del préstamo
   togglePaymentStatus(loan: any) {
-    loan.paid = !loan.paid;
+    loan.estado = loan.estado === 'Pendiente' ? 'Pagado' : 'Pendiente';
   }
 }

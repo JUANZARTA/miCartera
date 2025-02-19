@@ -31,18 +31,18 @@
         <tbody>
           <!-- 🔹 Generar filas dinámicamente con *ngFor -->
           <tr *ngFor="let loan of loans" class="border-b transition duration-300 hover:bg-gray-50">
-            <td class="py-4 px-6 font-semibold">{{ loan.debtor }}</td>
-            <td class="py-4 px-6 text-center">{{ loan.loanDate }}</td>
-            <td class="py-4 px-6 text-center">{{ loan.paymentDate }}</td>
+            <td class="py-4 px-6 font-semibold">{{ loan.deudor }}</td>
+            <td class="py-4 px-6 text-center">{{ loan.fecha_prestamo }}</td>
+            <td class="py-4 px-6 text-center">{{ loan.fecha_pago }}</td>
             <td class="py-4 px-6 text-right text-teal-600 font-semibold">
-              ${{ formatCurrency(loan.value) }}
+              ${{ formatCurrency(loan.valor) }}
             </td>
             <td class="py-4 px-6 text-center">
               <button
                 (click)="togglePaymentStatus(loan)"
                 class="px-3 py-1 text-xs font-semibold rounded-full transition duration-300"
-                [ngClass]="loan.paid ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-red-500 text-white hover:bg-red-600'">
-                {{ loan.paid ? 'Pagado' : 'Pendiente' }}
+                [ngClass]="loan.estado === 'Pagado' ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-red-500 text-white hover:bg-red-600'">
+                {{ loan.estado }}
               </button>
             </td>
           </tr>
