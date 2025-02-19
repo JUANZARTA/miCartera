@@ -1,28 +1,41 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-income',
   standalone: true,
-  imports: [CommonModule], // ✅ Agregamos CommonModule para habilitar *ngFor y pipes
+  imports: [CommonModule],
   templateUrl: './income.component.html',
-  styleUrls: ['./income.component.css'], // 🔹 Corregimos `styleUrl` -> `styleUrls`
+  styleUrls: ['./income.component.css'],
   providers: [DecimalPipe]
 })
-export default class IncomeComponent {
-  constructor(private decimalPipe: DecimalPipe) {}
+export default class IncomeComponent implements OnInit {
+  private http = inject(HttpClient);
+  private decimalPipe = inject(DecimalPipe);
 
-  // 🔹 Lista de ingresos dinámica
-  incomes = [
-    { name: 'Siti World', category: 'Fijo', value: 1504000 },
-    { name: 'Golden Panda', category: 'Variable', value: 350000 },
-    { name: 'GPS', category: 'Variable', value: 70000 },
-    { name: 'Otros ingresos', category: 'Variable', value: 232800 }
-  ];
+  incomes: any[] = [];
+
+  ngOnInit() {
+    this.loadIncomes();
+  }
+
+  // 🔹 Cargar los ingresos desde `data.json`
+  loadIncomes() {
+    this.http.get<any>('/assets/data.json').subscribe({
+      next: (data) => {
+        console.log('✅ JSON de ingresos cargado:', data);
+        this.incomes = data.ingresos;
+      },
+      error: (err) => {
+        console.error('❌ Error al cargar JSON de ingresos:', err);
+      }
+    });
+  }
 
   // 🔹 Método para calcular el total de ingresos
   getTotalIncome(): number {
-    return this.incomes.reduce((sum, income) => sum + income.value, 0);
+    return this.incomes.reduce((sum, income) => sum + income.valor, 0);
   }
 
   // 🔹 Método para formatear valores de moneda manualmente
