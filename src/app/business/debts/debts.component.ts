@@ -1,29 +1,43 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-debts',
   standalone: true,
-  imports: [CommonModule], // ✅ Importamos CommonModule para habilitar *ngFor y pipes
+  imports: [CommonModule],
   templateUrl: './debts.component.html',
   styleUrls: ['./debts.component.css'],
-  providers: [DecimalPipe] // ✅ Agregamos DecimalPipe para formatear valores
+  providers: [DecimalPipe]
 })
-export default class DebtsComponent {
-  constructor(private decimalPipe: DecimalPipe) {}
+export default class DebtsComponent implements OnInit {
+  private http = inject(HttpClient);
+  private decimalPipe = inject(DecimalPipe);
 
-  // 🔹 Lista de deudas
-  debts = [
-    { creditor: 'Banco XYZ', debtDate: '2024-01-10', paymentDate: '2024-03-10', value: 1200000, paid: false },
-    { creditor: 'Juan López', debtDate: '2024-02-05', paymentDate: '2024-04-05', value: 600000, paid: true },
-    { creditor: 'Prestamista Local', debtDate: '2024-03-20', paymentDate: '2024-05-20', value: 350000, paid: false }
-  ];
+  debts: any[] = [];
+
+  ngOnInit() {
+    this.loadDebts();
+  }
+
+  // 🔹 Cargar las deudas desde `data.json`
+  loadDebts() {
+    this.http.get<any>('/assets/data.json').subscribe({
+      next: (data) => {
+        console.log('✅ JSON de deudas cargado:', data);
+        this.debts = data.deudas;
+      },
+      error: (err) => {
+        console.error('❌ Error al cargar JSON de deudas:', err);
+      }
+    });
+  }
 
   // 🔹 Método para calcular el total de deudas PENDIENTES
   getTotalPendingDebts(): number {
     return this.debts
-      .filter(debt => !debt.paid) // ✅ Solo sumamos las deudas que no están pagadas
-      .reduce((sum, debt) => sum + debt.value, 0);
+      .filter(debt => debt.estado === 'Pendiente') // ✅ Solo sumamos las deudas que están pendientes
+      .reduce((sum, debt) => sum + debt.valor, 0);
   }
 
   // 🔹 Método para formatear valores de moneda manualmente
@@ -31,8 +45,8 @@ export default class DebtsComponent {
     return this.decimalPipe.transform(value, '1.0-0') || '';
   }
 
-  // 🔹 Método para cambiar el estado de la deuda
+  // 🔹 Método para cambiar el estado de la deuda (si es pagada o no)
   togglePaymentStatus(debt: any) {
-    debt.paid = !debt.paid;
+    debt.estado = debt.estado === 'Pendiente' ? 'Pagado' : 'Pendiente';
   }
 }

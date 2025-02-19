@@ -2,20 +2,20 @@
     "usuarios": [
       {
         "id": 1,
-        "nombre": "Juan Pérez",
-        "correo": "juanperez@example.com",
-        "contraseña": "hashedpassword1"
+        "nombre": "zarta",
+        "correo": "zarta@gmail.com",
+        "contraseña": "1234"
       },
       {
         "id": 2,
-        "nombre": "Ana Gómez",
-        "correo": "anagomez@example.com",
-        "contraseña": "hashedpassword2"
+        "nombre": "james",
+        "correo": "james@gmail.com",
+        "contraseña": "0000"
       }
     ],
     "gastos": [
       {
-        "descripcion": "Renta",
+        "descripcion": "Renta JSON",
         "categoria": "Servicios",
         "valor": 120000,
         "estimacion": 205000
@@ -47,7 +47,7 @@
     ],
     "ingresos": [
       {
-        "nombre": "Siti World",
+        "nombre": "Siti World  JSON",
         "categoria": "Fijo",
         "valor": 1504000
       },
@@ -69,7 +69,7 @@
     ],
     "cartera": [
       {
-        "tipo": "Efectivo",
+        "tipo": "Efectivo  JSON",
         "valor": 500000
       },
       {
@@ -87,7 +87,7 @@
     ],
     "ahorros": [
       {
-        "tipo": "Efectivo",
+        "tipo": "Efectivo  JSON",
         "valor": 250000
       },
       {
@@ -105,7 +105,7 @@
     ],
     "prestamos": [
       {
-        "deudor": "James Muñoz",
+        "deudor": "James Muñoz  JSON",
         "fecha_prestamo": "2024-01-31",
         "fecha_pago": "2024-02-05",
         "valor": 31500,
@@ -128,7 +128,7 @@
     ],
     "deudas": [
       {
-        "acreedor": "Banco XYZ",
+        "acreedor": "Banco de Bogotá  JSON",
         "fecha_deuda": "2024-01-10",
         "fecha_pago": "2024-03-10",
         "valor": 1200000,
