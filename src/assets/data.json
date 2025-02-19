@@ -6,14 +6,9 @@
         "password": "000000"
       },
       {
-        "nombre": "James",
-        "email": "james@example.com",
+        "nombre": "James Muñoz",
+        "email": "james@gmail.com",
         "password": "123456"
-      },
-      {
-        "nombre": "Carlos López",
-        "email": "carlos@example.com",
-        "password": "654321"
       }
     ],
     "gastos": [
