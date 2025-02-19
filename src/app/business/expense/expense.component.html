@@ -31,15 +31,15 @@
           <tr *ngFor="let expense of expenses"
               [ngClass]="{ 'bg-orange-100 text-orange-700': isOverBudget(expense) }"
               class="border-b transition duration-300 hover:bg-gray-50">
-            <td class="py-4 px-6 font-semibold">{{ expense.description }}</td>
+            <td class="py-4 px-6 font-semibold">{{ expense.descripcion }}</td>
             <td class="py-4 px-6">
-              <span class="px-3 py-1 rounded-full text-xs font-semibold bg-orange-200 text-orange-700">{{ expense.category }}</span>
+              <span class="px-3 py-1 rounded-full text-xs font-semibold bg-orange-200 text-orange-700">{{ expense.categoria }}</span>
             </td>
             <td class="py-4 px-6 text-right font-semibold">
-              ${{ formatCurrency(expense.value) }}
+              ${{ formatCurrency(expense.valor) }}
             </td>
             <td class="py-4 px-6 text-right font-semibold">
-              ${{ formatCurrency(expense.estimated) }}
+              ${{ formatCurrency(expense.estimacion) }}
             </td>
           </tr>
 
@@ -54,7 +54,6 @@
               ${{ formatCurrency(getTotalEstimated()) }}
             </td>
           </tr>
-
         </tbody>
       </table>
     </div>
