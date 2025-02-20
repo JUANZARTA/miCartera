@@ -1,22 +1,19 @@
 <div class="mb-6 grid grid-cols-1 xl:grid-cols-2 gap-6">
-  <div class="relative flex flex-col bg-white rounded-xl shadow-lg overflow-hidden xl:col-span-2 border border-gray-200">
+  <div
+    class="relative flex flex-col bg-white rounded-xl shadow-lg overflow-hidden xl:col-span-2 border border-gray-200">
 
-    <!-- 🔹 Encabezado -->
-    <div class="flex items-center justify-between p-6 bg-gradient-to-r from-teal-600 to-emerald-500 text-white rounded-t-xl shadow-md">
+    <!-- Encabezado -->
+    <div
+      class="flex items-center justify-between p-6 bg-gradient-to-r from-teal-600 to-emerald-500 text-white rounded-t-xl shadow-md">
       <div>
         <h6 class="text-xl font-bold tracking-wide">Préstamos</h6>
         <p class="text-sm flex items-center gap-2 opacity-90">
           <strong>Estado de Préstamos</strong>
         </p>
       </div>
-      <button class="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition duration-300">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="h-6 w-6">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z"></path>
-        </svg>
-      </button>
     </div>
 
-    <!-- 🔹 Tabla -->
+    <!-- Tabla -->
     <div class="overflow-x-auto">
       <table class="w-full min-w-[640px] border-collapse">
         <thead class="bg-gray-100">
@@ -29,17 +26,44 @@
           </tr>
         </thead>
         <tbody>
-          <!-- 🔹 Generar filas dinámicamente con *ngFor -->
-          <tr *ngFor="let loan of loans" class="border-b transition duration-300 hover:bg-gray-50">
-            <td class="py-4 px-6 font-semibold">{{ loan.deudor }}</td>
-            <td class="py-4 px-6 text-center">{{ loan.fecha_prestamo }}</td>
-            <td class="py-4 px-6 text-center">{{ loan.fecha_pago }}</td>
+          <tr *ngFor="let loan of loans; let i = index" class="border-b transition duration-300 hover:bg-gray-50">
+
+            <!-- Nombre Deudor (Editable) -->
+            <td class="py-4 px-6 font-semibold" (dblclick)="editField(i, 'deudor')">
+              <input *ngIf="editingIndex === i && editingField === 'deudor'" [(ngModel)]="loan.deudor"
+                (blur)="saveEdit()" (keyup.enter)="saveEdit()" class="border p-1 w-full">
+              <span *ngIf="!(editingIndex === i && editingField === 'deudor')">{{ loan.deudor }}</span>
+            </td>
+
+            <!-- Fecha de Préstamo (Editable) -->
+            <td class="py-4 px-6 text-center" (dblclick)="editField(i, 'fecha_prestamo')">
+              <input *ngIf="editingIndex === i && editingField === 'fecha_prestamo'" [(ngModel)]="loan.fecha_prestamo"
+                (blur)="saveEdit()" (keyup.enter)="saveEdit()" type="date" class="border p-1 w-full">
+              <span *ngIf="!(editingIndex === i && editingField === 'fecha_prestamo')">{{ loan.fecha_prestamo }}</span>
+            </td>
+
+            <!-- Fecha de Pago (Editable) -->
+            <td class="py-4 px-6 text-center" (dblclick)="editField(i, 'fecha_pago')">
+              <input *ngIf="editingIndex === i && editingField === 'fecha_pago'" [(ngModel)]="loan.fecha_pago"
+                (blur)="saveEdit()" (keyup.enter)="saveEdit()" type="date" class="border p-1 w-full">
+              <span *ngIf="!(editingIndex === i && editingField === 'fecha_pago')">{{ loan.fecha_pago }}</span>
+            </td>
+
+            <!-- Valor (Editable) -->
+            <td class="py-4 px-6 text-right font-semibold text-teal-600" (dblclick)="editField(i, 'valor')">
+              <input *ngIf="editingIndex === i && editingField === 'valor'" [(ngModel)]="loan.valor" (blur)="saveEdit()"
+                (keyup.enter)="saveEdit()" type="number" class="border p-1 w-full text-right">
+              <span *ngIf="!(editingIndex === i && editingField === 'valor')">
+                ${{ formatCurrency(loan.valor) }}
+              </span>
+            </td>
+
+            <!-- Estado (Editable con Dropdown) -->
             <td class="py-4 px-6 text-right text-teal-600 font-semibold">
               ${{ formatCurrency(loan.valor) }}
             </td>
             <td class="py-4 px-6 text-center">
-              <button
-                (click)="togglePaymentStatus(loan)"
+              <button (click)="togglePaymentStatus(loan)"
                 class="px-3 py-1 text-xs font-semibold rounded-full transition duration-300"
                 [ngClass]="loan.estado === 'Pagado' ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-red-500 text-white hover:bg-red-600'">
                 {{ loan.estado }}
@@ -47,7 +71,7 @@
             </td>
           </tr>
 
-          <!-- 🔹 Total Final (Solo suma préstamos NO pagados) -->
+          <!-- Total Préstamos Pendientes -->
           <tr class="bg-teal-50 font-bold text-teal-900">
             <td class="py-4 px-6 text-left">Total Préstamos Pendientes</td>
             <td class="py-4 px-6"></td>
@@ -57,9 +81,40 @@
             </td>
             <td class="py-4 px-6"></td>
           </tr>
-
         </tbody>
       </table>
+    </div>
+
+    <!-- Botón para agregar préstamo -->
+    <div class="flex justify-end p-4">
+      <button (click)="openModal()"
+        class="bg-teal-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-teal-600 transition">
+        Agregar Préstamo +
+      </button>
+    </div>
+
+    <!-- Modal para agregar préstamo -->
+    <div *ngIf="isModalOpen" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+      <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+        <h2 class="text-xl font-bold mb-4">Agregar Nuevo Préstamo</h2>
+
+        <label class="block mb-2">Nombre Deudor:</label>
+        <input type="text" [(ngModel)]="newLoan.deudor" class="w-full p-2 border rounded-md mb-3">
+
+        <label class="block mb-2">Fecha de Préstamo:</label>
+        <input type="date" [(ngModel)]="newLoan.fecha_prestamo" class="w-full p-2 border rounded-md mb-3">
+
+        <label class="block mb-2">Fecha de Pago:</label>
+        <input type="date" [(ngModel)]="newLoan.fecha_pago" class="w-full p-2 border rounded-md mb-3">
+
+        <label class="block mb-2">Valor:</label>
+        <input type="number" [(ngModel)]="newLoan.valor" class="w-full p-2 border rounded-md mb-3">
+
+        <div class="flex justify-end gap-2">
+          <button (click)="closeModal()" class="px-4 py-2 border rounded-md">Cancelar</button>
+          <button (click)="addLoan()" class="px-4 py-2 bg-green-500 text-white rounded-md">Agregar</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>

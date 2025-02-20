@@ -1,51 +1,108 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-loans',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './loans.component.html',
   styleUrls: ['./loans.component.css'],
-  providers: [DecimalPipe]
+  providers: [DecimalPipe],
 })
 export default class LoansComponent implements OnInit {
   private http = inject(HttpClient);
   private decimalPipe = inject(DecimalPipe);
 
   loans: any[] = [];
+  isModalOpen: boolean = false;
+
+  newLoan = {
+    deudor: '',
+    fecha_prestamo: '',
+    fecha_pago: '',
+    valor: 0,
+    estado: 'Pendiente',
+  };
+
+  editingIndex: number | null = null;
+  editingField: string = '';
 
   ngOnInit() {
     this.loadLoans();
   }
 
-  // 🔹 Cargar los préstamos desde `data.json`
+  // Cargar los préstamos desde el JSON
   loadLoans() {
     this.http.get<any>('/assets/data.json').subscribe({
       next: (data) => {
-        console.log('✅ JSON de préstamos cargado:', data);
         this.loans = data.prestamos;
       },
       error: (err) => {
-        console.error('❌ Error al cargar JSON de préstamos:', err);
-      }
+        console.error('Error al cargar los préstamos:', err);
+      },
     });
   }
 
-  // 🔹 Método para calcular el total de préstamos PENDIENTES
-  getTotalPendingLoans(): number {
-    return this.loans
-      .filter(loan => loan.estado === 'Pendiente') // ✅ Solo sumamos los préstamos pendientes
-      .reduce((sum, loan) => sum + loan.valor, 0);
+  // Abrir modal
+  openModal() {
+    this.isModalOpen = true;
   }
 
-  // 🔹 Método para formatear valores de moneda manualmente
+  // Cerrar modal y resetear formulario
+  closeModal() {
+    this.isModalOpen = false;
+    this.newLoan = {
+      deudor: '',
+      fecha_prestamo: '',
+      fecha_pago: '',
+      valor: 0,
+      estado: 'Pendiente',
+    };
+  }
+
+  // Agregar nuevo préstamo
+  addLoan() {
+    if (
+      !this.newLoan.deudor ||
+      !this.newLoan.fecha_prestamo ||
+      !this.newLoan.fecha_pago ||
+      this.newLoan.valor <= 0
+    ) {
+      alert('Por favor completa todos los campos.');
+      return;
+    }
+
+    this.loans.push({ ...this.newLoan });
+    this.closeModal();
+  }
+
+  // Calcular total de préstamos pendientes
+  getTotalPendingLoans(): number {
+    return this.loans
+      .filter((loan) => loan.estado === 'Pendiente')
+      .reduce((sum, loan) => sum + Number(loan.valor), 0);
+  }
+
+  // Formateo de moneda
   formatCurrency(value: number): string {
     return this.decimalPipe.transform(value, '1.0-0') || '';
   }
 
-  // 🔹 Método para cambiar el estado del préstamo
+  // Activar edición en la tabla
+  editField(index: number, field: string) {
+    this.editingIndex = index;
+    this.editingField = field;
+  }
+
+  // Guardar cambios en la celda editada
+  saveEdit() {
+    this.editingIndex = null;
+    this.editingField = '';
+  }
+
+  // Método para cambiar el estado del préstamo
   togglePaymentStatus(loan: any) {
     loan.estado = loan.estado === 'Pendiente' ? 'Pagado' : 'Pendiente';
   }
