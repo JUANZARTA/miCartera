@@ -13,35 +13,43 @@
     ],
     "gastos": [
       {
-        "descripcion": "Renta JSON",
-        "categoria": "Servicios",
+        "descripcion": "Renta",
+        "categoria": "Fijo",
         "valor": 120000,
         "estimacion": 205000
       },
       {
         "descripcion": "Comida",
-        "categoria": "Comida",
+        "categoria": "Variable",
         "valor": 40000,
         "estimacion": 55000
       },
       {
         "descripcion": "Gasolina",
-        "categoria": "Transporte",
+        "categoria": "Variable",
         "valor": 90000,
         "estimacion": 150000
       },
       {
         "descripcion": "Salidas",
-        "categoria": "Ocio",
+        "categoria": "Variable",
         "valor": 55000,
         "estimacion": 40000
       },
       {
         "descripcion": "Otros gastos",
-        "categoria": "Otro Tipo",
-        "valor": 400000,
+        "categoria": "Otro",
+        "valor": 10000,
+        "estimacion": 22000
+      },
+
+      {
+        "descripcion": "Accidente",
+        "categoria": "Emergencia",
+        "valor": 40000,
         "estimacion": 35000
       }
+
     ],
     "ingresos": [
       {
@@ -148,4 +156,3 @@
       }
     ]
   }
-  

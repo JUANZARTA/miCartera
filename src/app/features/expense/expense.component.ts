@@ -1,26 +1,43 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { FormsModule } from '@angular/forms'; // Importar FormsModule para ngModel
 
 @Component({
   selector: 'app-expense',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule], // Asegurar que FormsModule está importado
   templateUrl: './expense.component.html',
   styleUrls: ['./expense.component.css'],
-  providers: [DecimalPipe]
+  providers: [DecimalPipe],
 })
 export default class ExpenseComponent implements OnInit {
   private http = inject(HttpClient);
   private decimalPipe = inject(DecimalPipe);
 
   expenses: any[] = [];
+  isModalOpen: boolean = false;
+
+  // Lista de categorías disponibles
+  categorias: string[] = ['Variable', 'Fija', 'Emergencia', 'Otro'];
+
+  // Objeto temporal para nuevos gastos
+  newExpense = {
+    descripcion: '',
+    categoria: 'Variable', // Categoría por defecto
+    valor: 0,
+    estimacion: 0,
+  };
+
+  // Control de edición en la tabla
+  editingIndex: number | null = null;
+  editingField: string = '';
 
   ngOnInit() {
     this.loadExpenses();
   }
 
-  // 🔹 Cargar los gastos desde el JSON
+  // Cargar los gastos desde el JSON
   loadExpenses() {
     this.http.get<any>('/assets/data.json').subscribe({
       next: (data) => {
@@ -29,27 +46,78 @@ export default class ExpenseComponent implements OnInit {
       },
       error: (err) => {
         console.error('❌ Error al cargar JSON:', err);
-      }
+      },
     });
   }
 
-  // 🔹 Método para calcular el total de gastos reales
+  // Abrir modal para agregar nuevo gasto
+  openModal() {
+    this.isModalOpen = true;
+  }
+
+  // Cerrar modal y resetear formulario
+  closeModal() {
+    this.isModalOpen = false;
+    this.newExpense = {
+      descripcion: '',
+      categoria: 'Variable',
+      valor: 0,
+      estimacion: 0,
+    };
+  }
+
+  // Agregar nuevo gasto a la tabla
+  addExpense() {
+    if (!this.newExpense.descripcion || !this.newExpense.categoria) {
+      alert('Por favor completa todos los campos.');
+      return;
+    }
+
+    this.expenses.push({ ...this.newExpense }); // Agrega el gasto
+    this.closeModal(); // Cierra el modal
+  }
+
+  // Método para calcular el total de gastos reales
   getTotalExpenses(): number {
-    return this.expenses.reduce((sum, expense) => sum + expense.valor, 0);
+    return this.expenses.reduce(
+      (sum, expense) => sum + Number(expense.valor),
+      0
+    );
   }
 
-  // 🔹 Método para calcular el total estimado
+  // Método para calcular el total estimado
   getTotalEstimated(): number {
-    return this.expenses.reduce((sum, expense) => sum + expense.estimacion, 0);
+    return this.expenses.reduce(
+      (sum, expense) => sum + Number(expense.estimacion),
+      0
+    );
   }
 
-  // 🔹 Método para formatear valores de moneda
+  // Formateo de moneda
   formatCurrency(value: number): string {
     return this.decimalPipe.transform(value, '1.0-0') || '';
   }
 
-  // 🔴 Método para detectar si el gasto real es mayor que la estimación
+  // Método para detectar si el gasto real es mayor que la estimación
   isOverBudget(expense: { valor: number; estimacion: number }): boolean {
-    return expense.valor > expense.estimacion;
+    return Number(expense.valor) > Number(expense.estimacion);
+  }
+
+  // Activar edición en la tabla
+  editField(index: number, field: string) {
+    this.editingIndex = index;
+    this.editingField = field;
+  }
+
+  // Guardar cambios en la celda editada
+  saveEdit() {
+    if (this.editingIndex !== null && this.editingField) {
+      console.log(
+        `📌 Guardando cambios en ${this.editingField}:`,
+        this.expenses[this.editingIndex]
+      );
+    }
+    this.editingIndex = null;
+    this.editingField = '';
   }
 }
