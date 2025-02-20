@@ -1,11 +1,12 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-income',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './income.component.html',
   styleUrls: ['./income.component.css'],
   providers: [DecimalPipe]
@@ -15,31 +16,58 @@ export default class IncomeComponent implements OnInit {
   private decimalPipe = inject(DecimalPipe);
 
   incomes: any[] = [];
+  isModalOpen: boolean = false;
+  categorias: string[] = ['Fijo', 'Variable', 'Otro'];
+
+  newIncome = {
+    nombre: '',
+    categoria: 'Fijo',
+    valor: 0
+  };
+
+  editingIndex: number | null = null;
+  editingField: string = '';
 
   ngOnInit() {
     this.loadIncomes();
   }
 
-  // 🔹 Cargar los ingresos desde `data.json`
   loadIncomes() {
     this.http.get<any>('/assets/data.json').subscribe({
       next: (data) => {
-        console.log('✅ JSON de ingresos cargado:', data);
         this.incomes = data.ingresos;
-      },
-      error: (err) => {
-        console.error('❌ Error al cargar JSON de ingresos:', err);
       }
     });
   }
 
-  // 🔹 Método para calcular el total de ingresos
+  openModal() {
+    this.isModalOpen = true;
+  }
+
+  closeModal() {
+    this.isModalOpen = false;
+  }
+
+  addIncome() {
+    this.incomes.push({ ...this.newIncome });
+    this.closeModal();
+  }
+
   getTotalIncome(): number {
     return this.incomes.reduce((sum, income) => sum + income.valor, 0);
   }
 
-  // 🔹 Método para formatear valores de moneda manualmente
   formatCurrency(value: number): string {
     return this.decimalPipe.transform(value, '1.0-0') || '';
+  }
+
+  editField(index: number, field: string) {
+    this.editingIndex = index;
+    this.editingField = field;
+  }
+
+  saveEdit() {
+    this.editingIndex = null;
+    this.editingField = '';
   }
 }
