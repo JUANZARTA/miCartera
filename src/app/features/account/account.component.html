@@ -1,0 +1,40 @@
+<div class="account-container">
+  <h2>Tu Cuenta</h2>
+
+  <div class="profile-section">
+         alt="Foto de perfil" class="profile-pic">
+    <h3>{{ user?.name }}</h3>
+    <p>{{ user?.email }}</p>
+    <h4>Dinero Total: ${{ user?.totalMoney | number }}</h4>
+  </div>
+
+  <h3>📊 Resumen Financiero</h3>
+  <ul>
+    <li>💰 Ingresos: <strong>${{ user?.totalIncome | number }}</strong></li>
+    <li>💸 Gastos: <strong>${{ user?.totalExpenses | number }}</strong></li>
+    <li>🏦 Ahorros: <strong>${{ user?.totalSavings | number }}</strong></li>
+    <li>📉 Deudas: <strong>${{ user?.totalDebts | number }}</strong></li>
+  </ul>
+
+  <h3>📋 Últimos Movimientos</h3>
+  <ul>
+    <li *ngFor="let transaction of user?.recentTransactions">
+      {{ transaction.type === 'income' ? '🟢' : '🔴' }} {{ transaction.description }}:
+      ${{ transaction.amount | number }}
+    </li>
+  </ul>
+
+  <h3>🎯 Progreso de Ahorros</h3>
+  <div *ngFor="let goal of user?.savingsGoals">
+    <p>{{ goal.name }}: ${{ goal.current | number }} / ${{ goal.target | number }}</p>
+    <progress max="{{ goal.target }}" value="{{ goal.current }}"></progress>
+  </div>
+
+  <label class="switch">
+    <input type="checkbox" (change)="toggleTheme()">
+    <span class="slider"></span> Modo Oscuro
+  </label>
+
+  <button class="settings-btn">⚙️ Configuración</button>
+  <button class="logout-btn" (click)="logout()">Cerrar Sesión</button>
+</div>

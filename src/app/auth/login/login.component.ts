@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-login',
@@ -15,6 +16,7 @@ export default class LoginComponent implements OnInit {
   private http = inject(HttpClient);
   private router = inject(Router);
   private fb = inject(FormBuilder);
+  private cd = inject(ChangeDetectorRef);
 
   loginForm: FormGroup;
   showModal = false;
@@ -53,19 +55,22 @@ export default class LoginComponent implements OnInit {
 
   // 🔹 Validación y redirección al Home si los datos son correctos
   onSubmit() {
-    if (this.loginForm.valid) {
-      const { email, password } = this.loginForm.value;
-      
-      // Buscar si el usuario existe en `data.json`
-      const userFound = this.users.find(user => user.email === email && user.password === password);
+      if (this.loginForm.valid) {
+          const { email, password } = this.loginForm.value;
 
-      if (!userFound) {
-        this.showErrorModal('Correo o contraseña incorrectos. Intenta de nuevo.');
-      } else {
-        this.showWelcomeModal();
+          // Buscar si el usuario existe en `data.json`
+          const userFound = this.users.find(user => user.email === email && user.password === password);
+
+          if (!userFound) {
+              this.showErrorModal('Correo o contraseña incorrectos. Intenta de nuevo.');
+          } else {
+              // ✅ Guardamos el usuario en LocalStorage
+              localStorage.setItem('user', JSON.stringify(userFound));
+              this.showWelcomeModal();
+          }
       }
-    }
   }
+
 
   // 🔹 Mostrar el modal de error
   showErrorModal(message: string) {
@@ -83,7 +88,9 @@ export default class LoginComponent implements OnInit {
     this.showSuccessModal = true;
     setTimeout(() => {
       this.showSuccessModal = false;
-      this.router.navigate(['/home']); // ✅ Redirige al Home después de 1 segundo
-    }, 1000);
+      this.router.navigate(['app/home']).then(() => {
+        this.cd.detectChanges(); // ✅ Forzar actualización de la vista
+      });
+    }, 500);
   }
 }

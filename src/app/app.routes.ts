@@ -3,6 +3,11 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
     // Rutas de Autenticación (SIN LAYOUT)
     {
+        path: '',
+        redirectTo: 'login',
+        pathMatch: 'full'
+    },
+    {
         path: 'login',
         loadComponent: () => import('./auth/login/login.component')
     },
@@ -11,9 +16,9 @@ export const routes: Routes = [
         loadComponent: () => import('./auth/register/register.component')
     },
 
-    // Rutas Protegidas dentro del Layout
+    // Rutas protegidas dentro del layout
     {
-        path: '',
+        path: 'app', // Prefijo para las rutas protegidas
         loadComponent: () => import('./shared/components/layout/layout.component'),
         children: [
             { path: 'home', loadComponent: () => import('./features/home/home.component') },
@@ -23,10 +28,13 @@ export const routes: Routes = [
             { path: 'savings', loadComponent: () => import('./features/savings/savings.component') },
             { path: 'loans', loadComponent: () => import('./features/loans/loans.component') },
             { path: 'debts', loadComponent: () => import('./features/debts/debts.component') },
-            { path: '', redirectTo: 'home', pathMatch: 'full' }
+            { path: 'account', loadComponent: () => import('./features/account/account.component') },
+            { path: '', redirectTo: 'home', pathMatch: 'full' } // Ahora redirige a 'app/home'
         ]
     },
 
     // Redirección para rutas no encontradas
-    { path: '**', redirectTo: 'home' }
+    { path: '**', redirectTo: 'login' }
+
+
 ];
