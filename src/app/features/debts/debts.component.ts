@@ -1,11 +1,12 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-debts',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './debts.component.html',
   styleUrls: ['./debts.component.css'],
   providers: [DecimalPipe]
@@ -15,37 +16,49 @@ export default class DebtsComponent implements OnInit {
   private decimalPipe = inject(DecimalPipe);
 
   debts: any[] = [];
+  isModalOpen: boolean = false;
+
+  newDebt = {
+    acreedor: '',
+    fecha_deuda: '',
+    fecha_pago: '',
+    valor: 0,
+    estado: 'Pendiente'
+  };
+
+  editingIndex: number | null = null;
+  editingField: string = '';
 
   ngOnInit() {
     this.loadDebts();
   }
 
-  // 🔹 Cargar las deudas desde `data.json`
   loadDebts() {
     this.http.get<any>('/assets/data.json').subscribe({
       next: (data) => {
-        console.log('✅ JSON de deudas cargado:', data);
         this.debts = data.deudas;
-      },
-      error: (err) => {
-        console.error('❌ Error al cargar JSON de deudas:', err);
       }
     });
   }
 
-  // 🔹 Método para calcular el total de deudas PENDIENTES
   getTotalPendingDebts(): number {
-    return this.debts
-      .filter(debt => debt.estado === 'Pendiente') // ✅ Solo sumamos las deudas que están pendientes
-      .reduce((sum, debt) => sum + debt.valor, 0);
+    return this.debts.filter(debt => debt.estado === 'Pendiente').reduce((sum, debt) => sum + Number(debt.valor), 0);
   }
 
-  // 🔹 Método para formatear valores de moneda manualmente
   formatCurrency(value: number): string {
     return this.decimalPipe.transform(value, '1.0-0') || '';
   }
 
-  // 🔹 Método para cambiar el estado de la deuda (si es pagada o no)
+  openModal() { this.isModalOpen = true; }
+
+  closeModal() { this.isModalOpen = false; }
+
+  addDebt() { this.debts.push({ ...this.newDebt }); this.closeModal(); }
+
+  editField(index: number, field: string) { this.editingIndex = index; this.editingField = field; }
+
+  saveEdit() { this.editingIndex = null; this.editingField = ''; }
+  
   togglePaymentStatus(debt: any) {
     debt.estado = debt.estado === 'Pendiente' ? 'Pagado' : 'Pendiente';
   }
