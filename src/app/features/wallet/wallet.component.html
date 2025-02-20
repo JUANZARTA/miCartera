@@ -1,28 +1,17 @@
 <div class="mb-6 grid grid-cols-1 xl:grid-cols-2 gap-6">
-  <div
-    class="relative flex flex-col bg-white rounded-xl shadow-lg overflow-hidden xl:col-span-2 border border-gray-200">
+  <div class="relative flex flex-col bg-white rounded-xl shadow-lg overflow-hidden xl:col-span-2 border border-gray-200">
 
-    <!-- 🔹 Encabezado -->
-    <div
-      class="flex items-center justify-between p-6 bg-gradient-to-r from-green-600 to-teal-500 text-white rounded-t-xl shadow-md">
+    <!-- Encabezado -->
+    <div class="flex items-center justify-between p-6 bg-gradient-to-r from-green-600 to-teal-500 text-white rounded-t-xl shadow-md">
       <div>
         <h6 class="text-xl font-bold tracking-wide">Mi Cartera</h6>
         <p class="text-sm flex items-center gap-2 opacity-90">
           <strong>Estado Actual</strong>
         </p>
       </div>
-      <button
-        class="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition duration-300">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"
-          class="h-6 w-6">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z">
-          </path>
-        </svg>
-      </button>
     </div>
 
-    <!-- 🔹 Tabla -->
+    <!-- Tabla -->
     <div class="overflow-x-auto">
       <table class="w-full min-w-[640px] border-collapse">
         <thead class="bg-gray-100">
@@ -32,24 +21,60 @@
           </tr>
         </thead>
         <tbody>
-          <!-- 🔹 Generar filas dinámicamente con *ngFor -->
-          <tr *ngFor="let account of wallet" class="border-b transition duration-300 hover:bg-gray-50">
-            <td class="py-4 px-6 font-semibold">{{ account.tipo }}</td>
-            <td class="py-4 px-6 text-right text-green-600 font-semibold">
-              ${{ formatCurrency(account.valor) }}
+          <tr *ngFor="let account of wallet; let i = index" class="border-b transition duration-300 hover:bg-gray-50">
+
+            <!-- Dinero en (Editable) -->
+            <td class="py-4 px-6 font-semibold" (dblclick)="editField(i, 'tipo')">
+              <input *ngIf="editingIndex === i && editingField === 'tipo'" [(ngModel)]="account.tipo"
+                (blur)="saveEdit()" (keyup.enter)="saveEdit()" class="border p-1 w-full">
+              <span *ngIf="!(editingIndex === i && editingField === 'tipo')">{{ account.tipo }}</span>
+            </td>
+
+            <!-- Valor (Editable) -->
+            <td class="py-4 px-6 text-right font-semibold text-green-600" (dblclick)="editField(i, 'valor')">
+              <input *ngIf="editingIndex === i && editingField === 'valor'" [(ngModel)]="account.valor"
+                (blur)="saveEdit()" (keyup.enter)="saveEdit()" type="number" class="border p-1 w-full text-right">
+              <span *ngIf="!(editingIndex === i && editingField === 'valor')">
+                ${{ formatCurrency(account.valor) }}
+              </span>
             </td>
           </tr>
 
-          <!-- 🔹 Total Final (Calculado dinámicamente) -->
+          <!-- Total Final -->
           <tr class="bg-green-50 font-bold text-green-900">
             <td class="py-4 px-6 text-left">Total</td>
             <td class="py-4 px-6 text-right">
               ${{ formatCurrency(getTotalWallet()) }}
             </td>
           </tr>
-
         </tbody>
       </table>
+    </div>
+
+    <!-- Botón para agregar cuenta -->
+    <div class="flex justify-end p-4">
+      <button (click)="openModal()"
+        class="bg-green-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-green-600 transition">
+        Agregar Cuenta +
+      </button>
+    </div>
+
+    <!-- Modal para agregar cuenta -->
+    <div *ngIf="isModalOpen" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+      <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+        <h2 class="text-xl font-bold mb-4">Agregar Nueva Cuenta</h2>
+
+        <label class="block mb-2">Dinero en:</label>
+        <input type="text" [(ngModel)]="newAccount.tipo" class="w-full p-2 border rounded-md mb-3">
+
+        <label class="block mb-2">Valor:</label>
+        <input type="number" [(ngModel)]="newAccount.valor" class="w-full p-2 border rounded-md mb-3">
+
+        <div class="flex justify-end gap-2">
+          <button (click)="closeModal()" class="px-4 py-2 border rounded-md">Cancelar</button>
+          <button (click)="addAccount()" class="px-4 py-2 bg-green-500 text-white rounded-md">Agregar</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
