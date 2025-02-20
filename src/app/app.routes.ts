@@ -16,13 +16,13 @@ export const routes: Routes = [
         path: '',
         loadComponent: () => import('./shared/components/layout/layout.component'),
         children: [
-            { path: 'home', loadComponent: () => import('./business/home/home.component') },
-            { path: 'expense', loadComponent: () => import('./business/expense/expense.component') },
-            { path: 'income', loadComponent: () => import('./business/income/income.component') },
-            { path: 'wallet', loadComponent: () => import('./business/wallet/wallet.component') },
-            { path: 'savings', loadComponent: () => import('./business/savings/savings.component') },
-            { path: 'loans', loadComponent: () => import('./business/loans/loans.component') },
-            { path: 'debts', loadComponent: () => import('./business/debts/debts.component') },
+            { path: 'home', loadComponent: () => import('./features/home/home.component') },
+            { path: 'expense', loadComponent: () => import('./features/expense/expense.component') },
+            { path: 'income', loadComponent: () => import('./features/income/income.component') },
+            { path: 'wallet', loadComponent: () => import('./features/wallet/wallet.component') },
+            { path: 'savings', loadComponent: () => import('./features/savings/savings.component') },
+            { path: 'loans', loadComponent: () => import('./features/loans/loans.component') },
+            { path: 'debts', loadComponent: () => import('./features/debts/debts.component') },
             { path: '', redirectTo: 'home', pathMatch: 'full' }
         ]
     },
