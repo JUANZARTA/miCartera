@@ -21,14 +21,14 @@ export const routes: Routes = [
         path: 'app', // Prefijo para las rutas protegidas
         loadComponent: () => import('./shared/components/layout/layout.component'),
         children: [
-            { path: 'home', loadComponent: () => import('./features/home/home.component') },
-            { path: 'expense', loadComponent: () => import('./features/expense/expense.component') },
-            { path: 'income', loadComponent: () => import('./features/income/income.component') },
-            { path: 'wallet', loadComponent: () => import('./features/wallet/wallet.component') },
-            { path: 'savings', loadComponent: () => import('./features/savings/savings.component') },
-            { path: 'loans', loadComponent: () => import('./features/loans/loans.component') },
-            { path: 'debts', loadComponent: () => import('./features/debts/debts.component') },
-            { path: 'account', loadComponent: () => import('./features/account/account.component') },
+            { path: 'home', loadComponent: () => import('./page/home/home.component') },
+            { path: 'expense', loadComponent: () => import('./page/expense/expense.component') },
+            { path: 'income', loadComponent: () => import('./page/income/income.component') },
+            { path: 'wallet', loadComponent: () => import('./page/wallet/wallet.component') },
+            { path: 'saving', loadComponent: () => import('./page/savings/savings.component') },
+            { path: 'loan', loadComponent: () => import('./page/loans/loans.component') },
+            { path: 'debt', loadComponent: () => import('./page/debts/debts.component') },
+            { path: 'account', loadComponent: () => import('./page/account/account.component') },
             { path: '', redirectTo: 'home', pathMatch: 'full' } // Ahora redirige a 'app/home'
         ]
     },
