@@ -39,7 +39,7 @@ export default class LoginComponent implements OnInit {
   loadUsers() {
     this.http.get<any>('/assets/data.json').subscribe({
       next: (data) => {
-        console.log('✅ Usuarios cargados:', data.usuarios);
+        //console.log('✅ Usuarios cargados:', data.usuarios);
         this.users = data.usuarios;
       },
       error: (err) => {
@@ -91,6 +91,6 @@ export default class LoginComponent implements OnInit {
       this.router.navigate(['app/home']).then(() => {
         this.cd.detectChanges(); // ✅ Forzar actualización de la vista
       });
-    }, 500);
+    }, 1000);
   }
 }
