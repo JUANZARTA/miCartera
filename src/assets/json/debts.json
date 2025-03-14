@@ -1,0 +1,25 @@
+{
+  "deudas": [
+    {
+      "acreedor": "Bancolombia",
+      "fecha_deuda": "2024-01-10",
+      "fecha_pago": "2024-03-10",
+      "valor": 1200000,
+      "estado": "Pendiente"
+    },
+    {
+      "acreedor": "Maria Ruby",
+      "fecha_deuda": "2024-02-05",
+      "fecha_pago": "2024-04-05",
+      "valor": 600000,
+      "estado": "Pendiente"
+    },
+    {
+      "acreedor": "Pedro Perez",
+      "fecha_deuda": "2024-03-20",
+      "fecha_pago": "2024-05-20",
+      "valor": 350000,
+      "estado": "pagado"
+    }
+  ]
+}

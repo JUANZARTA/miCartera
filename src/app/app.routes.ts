@@ -28,7 +28,6 @@ export const routes: Routes = [
             { path: 'saving', loadComponent: () => import('./page/savings/savings.component') },
             { path: 'loan', loadComponent: () => import('./page/loans/loans.component') },
             { path: 'debt', loadComponent: () => import('./page/debts/debts.component') },
-            { path: 'account', loadComponent: () => import('./page/account/account.component') },
             { path: '', redirectTo: 'home', pathMatch: 'full' } // Ahora redirige a 'app/home'
         ]
     },

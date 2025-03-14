@@ -1,8 +1,10 @@
 <div class="mb-6 grid grid-cols-1 xl:grid-cols-2 gap-6">
-  <div class="relative flex flex-col bg-white rounded-xl shadow-lg overflow-hidden xl:col-span-2 border border-gray-200">
+  <div
+    class="relative flex flex-col bg-white rounded-xl shadow-lg overflow-hidden xl:col-span-2 border border-gray-200">
 
     <!-- Encabezado -->
-    <div class="flex items-center justify-between p-6 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-t-xl shadow-md">
+    <div
+      class="flex items-center justify-between p-6 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-t-xl shadow-md">
       <div>
         <h6 class="text-xl font-bold tracking-wide">Deudas</h6>
         <p class="text-sm flex items-center gap-2 opacity-90">
@@ -49,8 +51,8 @@
 
             <!-- Valor (Editable) -->
             <td class="py-4 px-6 text-right font-semibold text-red-600" (dblclick)="editField(i, 'valor')">
-              <input *ngIf="editingIndex === i && editingField === 'valor'" [(ngModel)]="debt.valor"
-                (blur)="saveEdit()" (keyup.enter)="saveEdit()" type="number" class="border p-1 w-full text-right">
+              <input *ngIf="editingIndex === i && editingField === 'valor'" [(ngModel)]="debt.valor" (blur)="saveEdit()"
+                (keyup.enter)="saveEdit()" type="number" class="border p-1 w-full text-right">
               <span *ngIf="!(editingIndex === i && editingField === 'valor')">
                 ${{ formatCurrency(debt.valor) }}
               </span>
@@ -58,8 +60,7 @@
 
             <!-- Estado (Editable con Dropdown) -->
             <td class="py-4 px-6 text-center">
-              <button
-                (click)="togglePaymentStatus(debt)"
+              <button (click)="togglePaymentStatus(debt)"
                 class="px-3 py-1 text-xs font-semibold rounded-full transition duration-300"
                 [ngClass]="debt.estado === 'Pagado' ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-red-500 text-white hover:bg-red-600'">
                 {{ debt.estado }}
