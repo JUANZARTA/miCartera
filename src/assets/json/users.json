@@ -1,0 +1,14 @@
+{
+    "usuarios": [
+      {
+        "nombre": "Kmilo Zarta",
+        "email": "zarta@gmail.com",
+        "password": "000000"
+      },
+      {
+        "nombre": "James Muñoz",
+        "email": "james@gmail.com",
+        "password": "123456"
+      }
+    ]
+}

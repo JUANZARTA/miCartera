@@ -1,0 +1,20 @@
+{
+    "cartera": [
+      {
+        "tipo": "Efectivo  JSON",
+        "valor": 500000
+      },
+      {
+        "tipo": "Bancolombia",
+        "valor": 1200000
+      },
+      {
+        "tipo": "Daviplata",
+        "valor": 300000
+      },
+      {
+        "tipo": "Nequi",
+        "valor": 450000
+      }
+    ]
+}
