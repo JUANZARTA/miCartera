@@ -29,7 +29,7 @@
     </div>
   </div>
 
-  <!-- 🔹 Botones de Navegación -->
+  <!-- Botones de Navegación -->
   <div class="grid grid-cols-3 md:grid-cols-6 gap-4">
     <a routerLink="/app/expense" class="flex flex-col items-center bg-sky-700 text-white p-3 rounded-lg shadow-md hover:bg-gray-700 transition">
       <i class="fas fa-chart-pie text-3xl"></i> <!-- Aumentar tamaño del ícono -->
@@ -57,81 +57,81 @@
     </a>
   </div>
 
-  <!-- 🔹 Tablas: Gastos, Préstamos y Deudas -->
-   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <!-- Tabla Gastos -->
-    <div class="bg-white rounded-lg shadow-lg p-4">
-      <h3 class="text-lg font-semibold text-gray-700 bg-gradient-to-r from-orange-600 to-yellow-500 text-white px-4 py-2 rounded-t-lg">Tabla de Gastos</h3>
-      <table class="w-full border-collapse">
-        <thead>
-          <tr class="bg-gray-100">
-            <th class="p-2 text-left">Descripción</th>
-            <th class="p-2 text-right">Valor</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let expense of expenses" class="border-b">
-            <td class="p-2">{{ expense.name }}</td>
-            <td class="p-2 text-right">{{ expense.value | currency }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Tabla Préstamos -->
-    <div class="bg-white rounded-lg shadow-lg p-4">
-      <h3 class="text-lg font-semibold text-gray-700 bg-gradient-to-r from-teal-600 to-emerald-500 text-white px-4 py-2 rounded-t-lg">Tabla de Préstamos</h3>
-      <table class="w-full border-collapse">
-        <thead>
-          <tr class="bg-gray-100">
-            <th class="p-2 text-left">Deudor</th>
-            <th class="p-2 text-center">Estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let loan of loans" class="border-b">
-            <td class="p-2">{{ loan.name }}</td>
-            <td class="p-2 text-center" [ngClass]="loan.status === 'Pagado' ? 'text-green-500' : 'text-red-500'">{{ loan.status }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Tabla Deudas -->
-    <div class="bg-white rounded-lg shadow-lg p-4">
-      <h3 class="text-lg font-semibold text-gray-700 bg-gradient-to-r from-red-600 to-orange-600 text-white px-4 py-2 rounded-t-lg">Tabla de Deudas</h3>
-      <table class="w-full border-collapse">
-        <thead>
-          <tr class="bg-gray-100">
-            <th class="p-2 text-left">Acreedor</th>
-            <th class="p-2 text-center">Estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let debt of debts" class="border-b">
-            <td class="p-2">{{ debt.name }}</td>
-            <td class="p-2 text-center" [ngClass]="debt.status === 'Pagado' ? 'text-green-500' : 'text-red-500'">{{ debt.status }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+  <!-- 🔹 Tablas: Resumen de Cartera, Deudas y Préstamos -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+  <!-- Tabla Cartera -->
+  <div class="bg-white rounded-lg shadow-lg p-4">
+    <h3 class="text-lg font-semibold text-gray-700 bg-gradient-to-r from-green-600 to-teal-500 text-white px-4 py-2 rounded-t-lg">Cartera</h3>
+    <table class="w-full border-collapse">
+      <thead>
+        <tr class="bg-gray-100">
+          <th class="p-2 text-left">Dinero en</th>
+          <th class="p-2 text-right">Valor</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of wallet" class="border-b">
+          <td class="p-2">{{ item.tipo }}</td>
+          <td class="p-2 text-right">{{ item.valor | currency }}</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 
-  <!-- 🔹 Casillas de Información -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-    <div class=" bg-gradient-to-r from-green-600 to-teal-500  text-white p-4 rounded-lg shadow-md">
-      <h3 class="text-lg font-semibold">Total en Cartera</h3>
-      <p class="text-2xl font-bold">{{ totalWallet | currency }}</p>
-    </div>
-
-    <div class="bg-gradient-to-r from-indigo-600 to-purple-500 text-white p-4 rounded-lg shadow-md">
-      <h3 class="text-lg font-semibold">Total Ingresos</h3>
-      <p class="text-2xl font-bold">{{ totalIncome | currency }}</p>
-    </div>
-
-    <div class="bg-gradient-to-r from-blue-700 to-teal-500 text-white p-4 rounded-lg shadow-md">
-      <h3 class="text-lg font-semibold">Total Ahorros</h3>
-      <p class="text-2xl font-bold">{{ totalSavings | currency }}</p>
-    </div>
+  <!-- Tabla Deudas -->
+  <div class="bg-white rounded-lg shadow-lg p-4">
+    <h3 class="text-lg font-semibold text-gray-700 bg-gradient-to-r from-red-600 to-orange-600 text-white px-4 py-2 rounded-t-lg">Deudas</h3>
+    <table class="w-full border-collapse">
+      <thead>
+        <tr class="bg-gray-100">
+          <th class="p-2 text-left">Nombre Deuda</th>
+          <th class="p-2 text-center">Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let debt of debts" class="border-b">
+          <td class="p-2">{{ debt.acreedor }}</td>
+          <td class="p-2 text-center">{{ debt.estado }}</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
+
+  <!-- Tabla Préstamos -->
+  <div class="bg-white rounded-lg shadow-lg p-4">
+    <h3 class="text-lg font-semibold text-gray-700 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-t-lg">Préstamos</h3>
+    <table class="w-full border-collapse">
+      <thead>
+        <tr class="bg-gray-100">
+          <th class="p-2 text-left">Nombre Deudor</th>
+          <th class="p-2 text-center">Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let loan of loans" class="border-b">
+          <td class="p-2">{{ loan.deudor }}</td>
+          <td class="p-2 text-center">{{ loan.estado }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 🔹 Casillas de Información -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+  <div class="bg-gradient-to-r from-green-600 to-teal-500 text-white p-4 rounded-lg shadow-md">
+    <h3 class="text-lg font-semibold">Total en Cartera</h3>
+    <p class="text-2xl font-bold">{{ totalWallet | currency }}</p>
+  </div>
+  <div class="bg-gradient-to-r from-red-600 to-orange-600 text-white p-4 rounded-lg shadow-md">
+    <h3 class="text-lg font-semibold">Total Deudas Pendientes</h3>
+    <p class="text-2xl font-bold">{{ totalPendingDebts | currency }}</p>
+  </div>
+  <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-lg shadow-md">
+    <h3 class="text-lg font-semibold">Total Préstamos Pendientes</h3>
+    <p class="text-2xl font-bold">{{ totalPendingLoans | currency }}</p>
+  </div>
+</div>
+
+  
 </div>
