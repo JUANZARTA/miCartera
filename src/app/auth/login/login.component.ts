@@ -13,17 +13,20 @@ import { ChangeDetectorRef } from '@angular/core';
   styleUrls: ['./login.component.css']
 })
 export default class LoginComponent implements OnInit {
+  // Inyección de dependencias
   private http = inject(HttpClient);
   private router = inject(Router);
   private fb = inject(FormBuilder);
   private cd = inject(ChangeDetectorRef);
 
+  // Variables
   loginForm: FormGroup;
   showModal = false;
   showSuccessModal = false;
   errorMessage = '';
   users: any[] = []; // Lista de usuarios obtenidos de `data.json`
 
+  // Constructor
   constructor() {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -31,29 +34,30 @@ export default class LoginComponent implements OnInit {
     });
   }
 
+  // Método para inicializar el componente
   ngOnInit() {
     this.loadUsers();
   }
 
-  // 🔹 Cargar los usuarios desde `data.json`
+  // Cargar los usuarios desde `data.json`
   loadUsers() {
-    this.http.get<any>('/assets/data.json').subscribe({
+    this.http.get<any>('/assets/json/users.json').subscribe({
       next: (data) => {
         //console.log('✅ Usuarios cargados:', data.usuarios);
         this.users = data.usuarios;
       },
       error: (err) => {
-        console.error('❌ Error al cargar usuarios:', err);
+        //console.error('❌ Error al cargar usuarios:', err);
       }
     });
   }
 
-  // 🔹 Método para verificar si un campo es inválido
+  // Método para verificar si un campo es inválido
   isInvalid(field: string): boolean {
     return this.loginForm.controls[field].invalid && this.loginForm.controls[field].touched;
   }
 
-  // 🔹 Validación y redirección al Home si los datos son correctos
+  // Validación y redirección al Home si los datos son correctos
   onSubmit() {
       if (this.loginForm.valid) {
           const { email, password } = this.loginForm.value;
@@ -71,19 +75,18 @@ export default class LoginComponent implements OnInit {
       }
   }
 
-
-  // 🔹 Mostrar el modal de error
+  // Mostrar el modal de error
   showErrorModal(message: string) {
     this.errorMessage = message;
     this.showModal = true;
   }
 
-  // 🔹 Cerrar el modal de error
+  // Cerrar el modal de error
   closeModal() {
     this.showModal = false;
   }
 
-  // 🔹 Mostrar el modal de bienvenida y redirigir en 1 segundo
+  // Mostrar el modal de bienvenida y redirigir en 1 segundo
   showWelcomeModal() {
     this.showSuccessModal = true;
     setTimeout(() => {

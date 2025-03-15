@@ -12,12 +12,19 @@ import { FormsModule } from '@angular/forms';
   providers: [DecimalPipe],
 })
 export default class LoansComponent implements OnInit {
+  // Inyección de dependencias
   private http = inject(HttpClient);
   private decimalPipe = inject(DecimalPipe);
 
+  // Variables
   loans: any[] = [];
-  isModalOpen: boolean = false;
+  isModalOpen: boolean = false;  
 
+  // Control de edición en la tabla
+  editingIndex: number | null = null;
+  editingField: string = '';
+
+  // Objeto temporal para nuevos pré
   newLoan = {
     deudor: '',
     fecha_prestamo: '',
@@ -26,21 +33,19 @@ export default class LoansComponent implements OnInit {
     estado: 'Pendiente',
   };
 
-  editingIndex: number | null = null;
-  editingField: string = '';
-
+  // Método para inicializar el componente
   ngOnInit() {
     this.loadLoans();
   }
 
   // Cargar los préstamos desde el JSON
   loadLoans() {
-    this.http.get<any>('/assets/data.json').subscribe({
+    this.http.get<any>('/assets/json/loans.json').subscribe({
       next: (data) => {
         this.loans = data.prestamos;
       },
       error: (err) => {
-        console.error('Error al cargar los préstamos:', err);
+        //console.error('Error al cargar los préstamos:', err);
       },
     });
   }

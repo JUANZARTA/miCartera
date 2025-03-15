@@ -12,11 +12,17 @@ import { FormsModule } from '@angular/forms'; // Importar FormsModule para ngMod
   providers: [DecimalPipe],
 })
 export default class ExpenseComponent implements OnInit {
+  // Inyección de dependencias
   private http = inject(HttpClient);
   private decimalPipe = inject(DecimalPipe);
 
+  // Variables
   expenses: any[] = [];
   isModalOpen: boolean = false;
+
+  // Control de edición en la tabla
+  editingIndex: number | null = null;
+  editingField: string = '';
 
   // Lista de categorías disponibles
   categorias: string[] = ['Variable', 'Fija', 'Emergencia', 'Otro'];
@@ -27,25 +33,22 @@ export default class ExpenseComponent implements OnInit {
     categoria: 'Variable', // Categoría por defecto
     valor: 0,
     estimacion: 0,
-  };
+  };  
 
-  // Control de edición en la tabla
-  editingIndex: number | null = null;
-  editingField: string = '';
-
+  // Método para inicializar el componente
   ngOnInit() {
     this.loadExpenses();
   }
 
   // Cargar los gastos desde el JSON
   loadExpenses() {
-    this.http.get<any>('/assets/data.json').subscribe({
+    this.http.get<any>('/assets/json/expense.json').subscribe({
       next: (data) => {
-        console.log('📌 JSON cargado correctamente:', data);
+        //console.log('📌 JSON cargado correctamente:', data);
         this.expenses = data.gastos;
       },
       error: (err) => {
-        console.error('❌ Error al cargar JSON:', err);
+        //console.error('❌ Error al cargar JSON:', err);
       },
     });
   }
