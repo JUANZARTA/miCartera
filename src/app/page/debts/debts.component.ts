@@ -19,9 +19,11 @@ export default class DebtsComponent implements OnInit {
   editingIndex: number | null = null;
   editingField: string = '';
 
+  // Variables
   debts: any[] = [];
   isModalOpen: boolean = false;
 
+  // Objeto temporal para nuevas deudas
   newDebt = {
     acreedor: '',
     fecha_deuda: '',
@@ -40,13 +42,18 @@ export default class DebtsComponent implements OnInit {
     this.http.get<any>('/assets/json/debts.json').subscribe({
       next: (data) => {
         this.debts = data.deudas;
+      },
+      error: (err) => {
+        //console.error('Error al cargar las deudas:', err);
       }
     });
   }
 
   // Método para obtener el total de deudas pendientes
   getTotalPendingDebts(): number {
-    return this.debts.filter(debt => debt.estado === 'Pendiente').reduce((sum, debt) => sum + Number(debt.valor), 0);
+    return this.debts
+      .filter((debt) => debt.estado === 'Pendiente')
+      .reduce((sum, debt) => sum + Number(debt.valor), 0);
   }
 
   // Método para obtener el total de deudas pagadas
