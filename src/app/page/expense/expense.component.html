@@ -1,10 +1,11 @@
 <div class="mb-6 grid grid-cols-1 xl:grid-cols-2 gap-6">
   <div
-    class="relative flex flex-col bg-white rounded-xl shadow-lg overflow-hidden xl:col-span-2 border border-gray-200">
-
+    class="relative flex flex-col bg-white rounded-xl shadow-lg overflow-hidden xl:col-span-2 border border-gray-200"
+  >
     <!-- Encabezado -->
     <div
-      class="flex items-center justify-between p-6 bg-gradient-to-r from-orange-600 to-yellow-500 text-white rounded-t-xl shadow-md">
+      class="flex items-center justify-between p-6 bg-gradient-to-r from-orange-600 to-yellow-500 text-white rounded-t-xl shadow-md"
+    >
       <div>
         <h6 class="text-xl font-bold tracking-wide">Tabla de Gastos</h6>
         <p class="text-sm flex items-center gap-2 opacity-90">
@@ -15,106 +16,177 @@
 
     <!-- Tabla de Gastos -->
     <div class="overflow-x-auto">
-      <table class="w-full min-w-[640px] border-collapse">
-        <thead class="bg-gray-100">
-          <tr class="border-b">
-            <th class="py-4 px-6 text-left text-xs font-semibold uppercase text-gray-600">Descripción</th>
-            <th class="py-4 px-6 text-left text-xs font-semibold uppercase text-gray-600">Categoría</th>
-            <th class="py-4 px-6 text-right text-xs font-semibold uppercase text-gray-600">Valor</th>
-            <th class="py-4 px-6 text-right text-xs font-semibold uppercase text-gray-600">Estimación</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let expense of expenses; let i = index"
-            [ngClass]="{ 'bg-orange-100 text-orange-700': isOverBudget(expense) }"
-            class="border-b transition duration-300 hover:bg-gray-50">
+      <div class="space-y-4">
+        <details
+          *ngFor="let grupo of getGroupedExpenses()"
+          class="border border-gray-300 rounded-md"
+        >
+          <summary
+            class="bg-orange-100 cursor-pointer p-4 font-bold text-orange-700 select-none"
+          >
+            {{ grupo.categoria }} ({{ grupo.items.length }} gastos)
+          </summary>
 
-            <!-- Descripción (Editable) -->
-            <td class="py-4 px-6 font-semibold" (dblclick)="editField(i, 'descripcion')">
-              <input *ngIf="editingIndex === i && editingField === 'descripcion'" [(ngModel)]="expense.descripcion"
-                (blur)="saveEdit()" (keyup.enter)="saveEdit()" class="border p-1 w-full">
-              <span *ngIf="!(editingIndex === i && editingField === 'descripcion')">{{ expense.descripcion }}</span>
-            </td>
-
-            <!-- Categoría (Editable con Dropdown) -->
-            <td class="py-4 px-6" (dblclick)="editField(i, 'categoria')">
-              <select *ngIf="editingIndex === i && editingField === 'categoria'" [(ngModel)]="expense.categoria"
-                (blur)="saveEdit()" class="border p-1 w-full">
-                <option *ngFor="let categoria of categorias" [value]="categoria">{{ categoria }}</option>
-              </select>
-              <span *ngIf="!(editingIndex === i && editingField === 'categoria')"
-                class="px-3 py-1 rounded-full text-xs font-semibold bg-orange-200 text-orange-700">
-                {{ expense.categoria }}
-              </span>
-            </td>
-
-            <!-- Valor (Editable) -->
-            <td class="py-4 px-6 text-right font-semibold" (dblclick)="editField(i, 'valor')">
-              <input *ngIf="editingIndex === i && editingField === 'valor'" [(ngModel)]="expense.valor"
-                (blur)="saveEdit()" (keyup.enter)="saveEdit()" type="number" class="border p-1 w-full text-right">
-              <span *ngIf="!(editingIndex === i && editingField === 'valor')">
-                ${{ formatCurrency(expense.valor) }}
-              </span>
-            </td>
-
-            <!-- Estimación (Editable) -->
-            <td class="py-4 px-6 text-right font-semibold" (dblclick)="editField(i, 'estimacion')">
-              <input *ngIf="editingIndex === i && editingField === 'estimacion'" [(ngModel)]="expense.estimacion"
-                (blur)="saveEdit()" (keyup.enter)="saveEdit()" type="number" class="border p-1 w-full text-right">
-              <span *ngIf="!(editingIndex === i && editingField === 'estimacion')">
-                ${{ formatCurrency(expense.estimacion) }}
-              </span>
-            </td>
-
-            <!-- Total Final (Calculado dinámicamente) -->
-          <tr class="bg-red-50 font-bold text-orange-700">
-            <td class="py-4 px-6 text-left">Total</td>
-            <td class="py-4 px-6"></td>
-            <td class="py-4 px-6 text-right">
-              ${{ formatCurrency(getTotalExpenses()) }}
-            </td>
-            <td class="py-4 px-6 text-right">
-              ${{ formatCurrency(getTotalEstimated()) }}
-            </td>
-            <td></td>
-          </tr>
-        </tbody>
-      </table>
+          <div class="overflow-x-auto">
+            <table class="w-full min-w-[640px] border-collapse">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="text-left py-2 px-4">Descripción</th>
+                  <th class="text-right py-2 px-4">Valor</th>
+                  <th class="text-right py-2 px-4">Estimación</th>
+                  <th class="text-center py-2 px-4">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  *ngFor="let expense of grupo.items; let i = index"
+                  class="border-t"
+                >
+                  <td class="py-2 px-4">{{ expense.descripcion }}</td>
+                  <td class="py-2 px-4 text-right">
+                    ${{ formatCurrency(expense.valor) }}
+                  </td>
+                  <td class="py-2 px-4 text-right">
+                    ${{ formatCurrency(expense.estimacion) }}
+                  </td>
+                  <td class="py-2 px-4 text-center">
+                    <button
+                      (click)="openEditModal(expenses.indexOf(expense))"
+                      class="text-blue-600 mr-2"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      (click)="deleteExpense(expenses.indexOf(expense))"
+                      class="text-red-600"
+                    >
+                      🗑️
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </div>
     </div>
 
     <!-- Botón para agregar gasto -->
     <div class="flex justify-end p-4">
-      <button (click)="openModal()"
-        class="bg-orange-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-orange-600 transition">
+      <button
+        (click)="openModal()"
+        class="bg-orange-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-orange-600 transition"
+      >
         Agregar Gasto +
       </button>
     </div>
 
     <!-- Modal de agregar gasto -->
-    <div *ngIf="isModalOpen" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+    <div
+      *ngIf="isModalOpen"
+      class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50"
+    >
       <div class="bg-white p-6 rounded-lg shadow-lg w-96">
         <h2 class="text-xl font-bold mb-4">Agregar Nuevo Gasto</h2>
 
         <label class="block mb-2">Descripción:</label>
-        <input type="text" [(ngModel)]="newExpense.descripcion" class="w-full p-2 border rounded-md mb-3">
+        <input
+          type="text"
+          [(ngModel)]="newExpense.descripcion"
+          class="w-full p-2 border rounded-md mb-3"
+        />
 
         <label class="block mb-2">Categoría:</label>
-        <select [(ngModel)]="newExpense.categoria" class="w-full p-2 border rounded-md mb-3">
-          <option *ngFor="let categoria of categorias" [value]="categoria">{{ categoria }}</option>
+        <select
+          [(ngModel)]="newExpense.categoria"
+          class="w-full p-2 border rounded-md mb-3"
+        >
+          <option *ngFor="let categoria of categorias" [value]="categoria">
+            {{ categoria }}
+          </option>
         </select>
 
         <label class="block mb-2">Valor:</label>
-        <input type="number" [(ngModel)]="newExpense.valor" class="w-full p-2 border rounded-md mb-3">
+        <input
+          type="number"
+          [(ngModel)]="newExpense.valor"
+          class="w-full p-2 border rounded-md mb-3"
+        />
 
         <label class="block mb-2">Estimación:</label>
-        <input type="number" [(ngModel)]="newExpense.estimacion" class="w-full p-2 border rounded-md mb-3">
+        <input
+          type="number"
+          [(ngModel)]="newExpense.estimacion"
+          class="w-full p-2 border rounded-md mb-3"
+        />
 
         <div class="flex justify-end gap-2">
-          <button (click)="closeModal()" class="px-4 py-2 border rounded-md">Cancelar</button>
-          <button (click)="addExpense()" class="px-4 py-2 bg-green-500 text-white rounded-md">Agregar</button>
+          <button (click)="closeModal()" class="px-4 py-2 border rounded-md">
+            Cancelar
+          </button>
+          <button
+            (click)="addExpense()"
+            class="px-4 py-2 bg-green-500 text-white rounded-md"
+          >
+            Agregar
+          </button>
         </div>
       </div>
     </div>
+    <!-- Modal de editar gasto -->
+    <div
+      *ngIf="isEditModalOpen"
+      class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50"
+    >
+      <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+        <h2 class="text-xl font-bold mb-4">Editar Gasto</h2>
 
+        <label class="block mb-2">Descripción:</label>
+        <input
+          type="text"
+          [(ngModel)]="editedExpense.descripcion"
+          class="w-full p-2 border rounded-md mb-3"
+        />
+
+        <label class="block mb-2">Categoría:</label>
+        <select
+          [(ngModel)]="editedExpense.categoria"
+          class="w-full p-2 border rounded-md mb-3"
+        >
+          <option *ngFor="let categoria of categorias" [value]="categoria">
+            {{ categoria }}
+          </option>
+        </select>
+
+        <label class="block mb-2">Valor:</label>
+        <input
+          type="number"
+          [(ngModel)]="editedExpense.valor"
+          class="w-full p-2 border rounded-md mb-3"
+        />
+
+        <label class="block mb-2">Estimación:</label>
+        <input
+          type="number"
+          [(ngModel)]="editedExpense.estimacion"
+          class="w-full p-2 border rounded-md mb-3"
+        />
+
+        <div class="flex justify-end gap-2">
+          <button
+            (click)="closeEditModal()"
+            class="px-4 py-2 border rounded-md"
+          >
+            Cancelar
+          </button>
+          <button
+            (click)="saveEditedExpense()"
+            class="px-4 py-2 bg-green-500 text-white rounded-md"
+          >
+            Guardar
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

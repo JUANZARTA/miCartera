@@ -1,126 +1,197 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { FormsModule } from '@angular/forms'; // Importar FormsModule para ngModel
+import { FormsModule } from '@angular/forms';
+import { ExpenseService } from '../../services/expense.service';
+import { CategoriaGasto, Expense } from '../../models/expense.model';
 
 @Component({
   selector: 'app-expense',
   standalone: true,
-  imports: [CommonModule, FormsModule], // Asegurar que FormsModule está importado
+  imports: [CommonModule, FormsModule],
   templateUrl: './expense.component.html',
   styleUrls: ['./expense.component.css'],
   providers: [DecimalPipe],
 })
 export default class ExpenseComponent implements OnInit {
-  // Inyección de dependencias
-  private http = inject(HttpClient);
+  // Servicios
+  private expenseService = inject(ExpenseService);
   private decimalPipe = inject(DecimalPipe);
 
-  // Variables
-  expenses: any[] = [];
-  isModalOpen: boolean = false;
+  // Datos
+  expenses: Expense[] = [];
 
-  // Control de edición en la tabla
+  // Modales
+  isModalOpen = false;
+  isEditModalOpen = false;
+
+  // Edición inline (opcional)
   editingIndex: number | null = null;
-  editingField: string = '';
+  editingField = '';
 
-  // Lista de categorías disponibles
-  categorias: string[] = ['Variable', 'Fija', 'Emergencia', 'Otro'];
+  // Categorías disponibles
+  categorias: string[] = Object.values(CategoriaGasto);
 
-  // Objeto temporal para nuevos gastos
-  newExpense = {
-    descripcion: '',
-    categoria: 'Variable', // Categoría por defecto
-    valor: 0,
-    estimacion: 0,
-  };  
+  // Gasto nuevo (modal)
+  newExpense: Expense = new Expense('', CategoriaGasto.Variable, 0, 0);
 
-  // Método para inicializar el componente
+  // Gasto en edición (modal)
+  editedExpense: Expense = new Expense('', CategoriaGasto.Variable, 0, 0);
+  editedIndex: number | null = null;
+
   ngOnInit() {
     this.loadExpenses();
   }
 
-  // Cargar los gastos desde el JSON
+  // Obtener gastos desde el servicio
   loadExpenses() {
-    this.http.get<any>('/assets/json/expense.json').subscribe({
+    this.expenseService.getExpenses().subscribe({
       next: (data) => {
-        //console.log('📌 JSON cargado correctamente:', data);
-        this.expenses = data.gastos;
+        this.expenses = data;
       },
       error: (err) => {
-        //console.error('❌ Error al cargar JSON:', err);
+        console.error('❌ Error al cargar gastos:', err);
       },
     });
   }
 
-  // Abrir modal para agregar nuevo gasto
+  // ======================
+  // Modal: Agregar Gasto
+  // ======================
   openModal() {
     this.isModalOpen = true;
   }
 
-  // Cerrar modal y resetear formulario
   closeModal() {
     this.isModalOpen = false;
-    this.newExpense = {
-      descripcion: '',
-      categoria: 'Variable',
-      valor: 0,
-      estimacion: 0,
-    };
+    this.newExpense = new Expense('', CategoriaGasto.Variable, 0, 0);
   }
 
-  // Agregar nuevo gasto a la tabla
   addExpense() {
     if (!this.newExpense.descripcion || !this.newExpense.categoria) {
       alert('Por favor completa todos los campos.');
       return;
     }
 
-    this.expenses.push({ ...this.newExpense }); // Agrega el gasto
-    this.closeModal(); // Cierra el modal
+    this.expenseService.addExpense({ ...this.newExpense }).subscribe({
+      next: (updatedExpenses) => {
+        this.expenses = updatedExpenses;
+        this.closeModal();
+      },
+    });
   }
 
-  // Método para calcular el total de gastos reales
+  // ======================
+  // Modal: Editar Gasto
+  // ======================
+  openEditModal(index: number) {
+    const original = this.expenses[index];
+    this.editedExpense = new Expense(
+      original.descripcion,
+      original.categoria,
+      original.valor,
+      original.estimacion
+    );
+    this.editedIndex = index;
+    this.isEditModalOpen = true;
+  }
+
+  closeEditModal() {
+    this.isEditModalOpen = false;
+    this.editedExpense = new Expense('', CategoriaGasto.Variable, 0, 0);
+    this.editedIndex = null;
+  }
+
+  saveEditedExpense() {
+    if (this.editedIndex === null) return;
+
+    this.expenseService
+      .updateExpense(this.editedIndex, { ...this.editedExpense })
+      .subscribe({
+        next: (updatedExpenses) => {
+          this.expenses = updatedExpenses;
+          this.closeEditModal();
+        },
+        error: (err) => {
+          console.error('❌ Error al guardar edición:', err);
+        },
+      });
+  }
+
+  // ======================
+  // Eliminar
+  // ======================
+  deleteExpense(index: number) {
+    const confirmDelete = confirm('¿Estás seguro de eliminar este gasto?');
+    if (!confirmDelete) return;
+
+    this.expenseService.deleteExpense(index).subscribe({
+      next: (updatedExpenses) => {
+        this.expenses = updatedExpenses;
+      },
+      error: (err) => {
+        console.error('❌ Error al eliminar el gasto:', err);
+      },
+    });
+  }
+
+  // ======================
+  // Utilidades
+  // ======================
   getTotalExpenses(): number {
-    return this.expenses.reduce(
-      (sum, expense) => sum + Number(expense.valor),
-      0
-    );
+    return this.expenses.reduce((sum, e) => sum + Number(e.valor), 0);
   }
 
-  // Método para calcular el total estimado
   getTotalEstimated(): number {
-    return this.expenses.reduce(
-      (sum, expense) => sum + Number(expense.estimacion),
-      0
-    );
+    return this.expenses.reduce((sum, e) => sum + Number(e.estimacion), 0);
   }
 
-  // Formateo de moneda
   formatCurrency(value: number): string {
     return this.decimalPipe.transform(value, '1.0-0') || '';
   }
 
-  // Método para detectar si el gasto real es mayor que la estimación
-  isOverBudget(expense: { valor: number; estimacion: number }): boolean {
+  isOverBudget(expense: Expense): boolean {
     return Number(expense.valor) > Number(expense.estimacion);
   }
 
-  // Activar edición en la tabla
+  // (Opcional) Edición inline
   editField(index: number, field: string) {
     this.editingIndex = index;
     this.editingField = field;
   }
 
-  // Guardar cambios en la celda editada
   saveEdit() {
     if (this.editingIndex !== null && this.editingField) {
-      console.log(
-        `📌 Guardando cambios en ${this.editingField}:`,
-        this.expenses[this.editingIndex]
-      );
+      const updatedExpense = this.expenses[this.editingIndex];
+      this.expenseService
+        .updateExpense(this.editingIndex, updatedExpense)
+        .subscribe({
+          next: (updatedList) => {
+            this.expenses = updatedList;
+          },
+          error: (err) => {
+            console.error('❌ Error al actualizar gasto:', err);
+          },
+        });
     }
+
     this.editingIndex = null;
     this.editingField = '';
   }
+
+
+
+  getGroupedExpenses(): { categoria: string; items: Expense[] }[] {
+    const map = new Map<string, Expense[]>();
+  
+    for (const exp of this.expenses) {
+      const cat = exp.categoria;
+      if (!map.has(cat)) {
+        map.set(cat, []);
+      }
+      map.get(cat)!.push(exp);
+    }
+  
+    return Array.from(map.entries()).map(([categoria, items]) => ({ categoria, items }));
+  }
+  
 }
