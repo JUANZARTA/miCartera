@@ -153,6 +153,32 @@ export default class ExpenseComponent implements OnInit {
     return Number(expense.valor) > Number(expense.estimacion);
   }
 
+  getGroupedExpenses(): { categoria: string; items: Expense[] }[] {
+    const map = new Map<string, Expense[]>();
+
+    for (const exp of this.expenses) {
+      const cat = exp.categoria;
+      if (!map.has(cat)) {
+        map.set(cat, []);
+      }
+      map.get(cat)!.push(exp);
+    }
+
+    return Array.from(map.entries()).map(([categoria, items]) => ({ categoria, items }));
+  }
+
+  getGroupTotal(items: any[]) {
+    return items.reduce((acc, item) => acc + (Number(item.valor) || 0), 0);
+  }
+
+  getGroupEstimatedTotal(items: any[]) {
+    return items.reduce((acc, item) => acc + (Number(item.estimacion) || 0), 0);
+  }
+
+  getTotalEstimations() {
+    return this.expenses.reduce((acc, item) => acc + (Number(item.estimacion) || 0), 0);
+  }
+
   // (Opcional) Edición inline
   editField(index: number, field: string) {
     this.editingIndex = index;
@@ -177,21 +203,4 @@ export default class ExpenseComponent implements OnInit {
     this.editingIndex = null;
     this.editingField = '';
   }
-
-
-
-  getGroupedExpenses(): { categoria: string; items: Expense[] }[] {
-    const map = new Map<string, Expense[]>();
-  
-    for (const exp of this.expenses) {
-      const cat = exp.categoria;
-      if (!map.has(cat)) {
-        map.set(cat, []);
-      }
-      map.get(cat)!.push(exp);
-    }
-  
-    return Array.from(map.entries()).map(([categoria, items]) => ({ categoria, items }));
-  }
-  
 }
