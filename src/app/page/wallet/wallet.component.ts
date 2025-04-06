@@ -1,7 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { WalletService } from '../../services/wallet.service';
+import { WalletAccount } from '../../models/wallet.model';
 
 @Component({
   selector: 'app-wallet',
@@ -12,73 +13,123 @@ import { FormsModule } from '@angular/forms';
   providers: [DecimalPipe]
 })
 export default class WalletComponent implements OnInit {
-  // Inyección de dependencias
-  private http = inject(HttpClient);
+  // Servicios
+  private walletService = inject(WalletService);
   private decimalPipe = inject(DecimalPipe);
 
-  // Variables
-  wallet: any[] = [];
-  isModalOpen: boolean = false;
+  // Datos
+  wallet: WalletAccount[] = [];
 
-  // Variables para edición
-  editingIndex: number | null = null;
-  editingField: string = '';
+  // Modales
+  isModalOpen = false;
+  isEditModalOpen = false;
 
-  // Nueva cuenta
-  newAccount = {
-    tipo: '',
-    valor: 0
-  };
+  // Cuenta nueva
+  newAccount: WalletAccount = new WalletAccount('', 0);
 
-  // Método para inicializar el componente
+  // Cuenta en edición
+  editedAccount: WalletAccount = new WalletAccount('', 0);
+  editedIndex: number | null = null;
+
   ngOnInit() {
     this.loadWallet();
   }
 
-  // Método para cargar la cartera
+  // ======================
+  // Cargar datos
+  // ======================
   loadWallet() {
-    this.http.get<any>('/assets/json/wallet.json').subscribe({
+    this.walletService.getWallet().subscribe({
       next: (data) => {
-        this.wallet = data.cartera;
-      }
+        this.wallet = data;
+      },
+      error: (err) => {
+        console.error('Error al cargar la cartera:', err);
+      },
     });
   }
 
-  // Método para abrir el modal
+  // ======================
+  // Modal: Agregar
+  // ======================
   openModal() {
     this.isModalOpen = true;
   }
 
-  // Método para cerrar el modal
   closeModal() {
     this.isModalOpen = false;
+    this.newAccount = new WalletAccount('', 0);
   }
 
-  // Método para agregar una cuenta
   addAccount() {
-    this.wallet.push({ ...this.newAccount });
-    this.closeModal();
+    if (!this.newAccount.tipo) {
+      alert('Por favor completa todos los campos.');
+      return;
+    }
+
+    this.walletService.addAccount({ ...this.newAccount }).subscribe({
+      next: (updatedList) => {
+        this.wallet = updatedList;
+        this.closeModal();
+      },
+    });
   }
 
-  // Método para obtener el total de
+  // ======================
+  // Modal: Editar
+  // ======================
+  openEditModal(index: number) {
+    const original = this.wallet[index];
+    this.editedAccount = new WalletAccount(original.tipo, original.valor);
+    this.editedIndex = index;
+    this.isEditModalOpen = true;
+  }
+
+  closeEditModal() {
+    this.isEditModalOpen = false;
+    this.editedAccount = new WalletAccount('', 0);
+    this.editedIndex = null;
+  }
+
+  saveEditedAccount() {
+    if (this.editedIndex === null) return;
+
+    this.walletService.updateAccount(this.editedIndex, { ...this.editedAccount }).subscribe({
+      next: (updatedList) => {
+        this.wallet = updatedList;
+        this.closeEditModal();
+      },
+      error: (err) => {
+        console.error('Error al actualizar cuenta:', err);
+      },
+    });
+  }
+
+  // ======================
+  // Eliminar
+  // ======================
+  deleteAccount(index: number) {
+    const confirmDelete = confirm('¿Estás seguro de eliminar esta cuenta?');
+    if (!confirmDelete) return;
+
+    this.walletService.deleteAccount(index).subscribe({
+      next: (updatedList) => {
+        this.wallet = updatedList;
+      },
+      error: (err) => {
+        console.error('Error al eliminar cuenta:', err);
+      },
+    });
+  }
+
+  // ======================
+  // Utilidades
+  // ======================
   getTotalWallet(): number {
-    return this.wallet.reduce((sum, account) => sum + account.valor, 0);
+    return this.wallet.reduce((sum, e) => sum + Number(e.valor), 0);
   }
 
-  // Método para dar formato a un número
   formatCurrency(value: number): string {
     return this.decimalPipe.transform(value, '1.0-0') || '';
-  }
-
-  // Método para editar un campo
-  editField(index: number, field: string) {
-    this.editingIndex = index;
-    this.editingField = field;
-  }
-
-  // Método para guardar la edición
-  saveEdit() {
-    this.editingIndex = null;
-    this.editingField = '';
   }
 }

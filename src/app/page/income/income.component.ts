@@ -1,7 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { IncomeService } from '../../services/income.service';
+import { CategoriaIngreso, Income } from '../../models/income.model';
 
 @Component({
   selector: 'app-income',
@@ -12,75 +13,146 @@ import { FormsModule } from '@angular/forms';
   providers: [DecimalPipe]
 })
 export default class IncomeComponent implements OnInit {
-  // Inyección de dependencias
-  private http = inject(HttpClient);
+  // Servicios
+  private incomeService = inject(IncomeService);
   private decimalPipe = inject(DecimalPipe);
 
-  // Variables
-  incomes: any[] = [];
+  // Datos
+  incomes: Income[] = [];
+
+  // Modales
   isModalOpen: boolean = false;
-  categorias: string[] = ['Fijo', 'Variable', 'Otro'];
+  isEditModalOpen: boolean = false;
 
-  // Control de edición en la tabla
-  editingIndex: number | null = null;
-  editingField: string = '';
+  // Categorías disponibles
+  categorias: string[] = Object.values(CategoriaIngreso);
 
-  // Objeto temporal para nuevos ingres
-  newIncome = {
-    nombre: '',
-    categoria: 'Fijo',
-    valor: 0
-  };
+  // Ingreso nuevo (modal)
+  newIncome: Income = new Income('', CategoriaIngreso.Fijo, 0);
 
-  // Método para inicializar el componente
+  // Ingreso en edición (modal)
+  editedIncome: Income = new Income('', CategoriaIngreso.Fijo, 0);
+  editedIndex: number | null = null;
+
   ngOnInit() {
     this.loadIncomes();
   }
 
-  // Cargar los ingresos desde el JSON
+  // Obtener ingresos desde el servicio
   loadIncomes() {
-    this.http.get<any>('/assets/json/income.json').subscribe({
+    this.incomeService.getIncomes().subscribe({
       next: (data) => {
-        this.incomes = data.ingresos;
-      }
+        this.incomes = data;
+      },
+      error: (err) => {
+        console.error('Error al cargar ingresos:', err);
+      },
     });
   }
 
-  // Método para abrir y cerrar el modal
+  // ======================
+  // Modal: Agregar Ingreso
+  // ======================
   openModal() {
     this.isModalOpen = true;
   }
 
-  // Método para cerrar el modal
   closeModal() {
     this.isModalOpen = false;
+    this.newIncome = new Income('', CategoriaIngreso.Fijo, 0);
   }
 
-  // Método para agregar un nuevo ingreso
   addIncome() {
-    this.incomes.push({ ...this.newIncome });
-    this.closeModal();
+    if (!this.newIncome.nombre || !this.newIncome.categoria) {
+      alert('Por favor completa todos los campos.');
+      return;
+    }
+
+    this.incomeService.addIncome({ ...this.newIncome }).subscribe({
+      next: (updatedList) => {
+        this.incomes = updatedList;
+        this.closeModal();
+      },
+    });
   }
 
-  // Método para obtener el total de
+  // ======================
+  // Modal: Editar Ingreso
+  // ======================
+  openEditModal(index: number) {
+    const original = this.incomes[index];
+    this.editedIncome = new Income(
+      original.nombre,
+      original.categoria,
+      original.valor
+    );
+    this.editedIndex = index;
+    this.isEditModalOpen = true;
+  }
+
+  closeEditModal() {
+    this.isEditModalOpen = false;
+    this.editedIncome = new Income('', CategoriaIngreso.Fijo, 0);
+    this.editedIndex = null;
+  }
+
+  saveEditedIncome() {
+    if (this.editedIndex === null) return;
+
+    this.incomeService.updateIncome(this.editedIndex, { ...this.editedIncome }).subscribe({
+      next: (updatedList) => {
+        this.incomes = updatedList;
+        this.closeEditModal();
+      },
+      error: (err) => {
+        console.error('Error al actualizar ingreso:', err);
+      },
+    });
+  }
+
+  // ======================
+  // Eliminar
+  // ======================
+  deleteIncome(index: number) {
+    const confirmDelete = confirm('¿Estás seguro de eliminar este ingreso?');
+    if (!confirmDelete) return;
+
+    this.incomeService.deleteIncome(index).subscribe({
+      next: (updatedList) => {
+        this.incomes = updatedList;
+      },
+      error: (err) => {
+        console.error('Error al eliminar ingreso:', err);
+      },
+    });
+  }
+
+  // ======================
+  // Utilidades
+  // ======================
   getTotalIncome(): number {
-    return this.incomes.reduce((sum, income) => sum + income.valor, 0);
+    return this.incomes.reduce((sum, e) => sum + Number(e.valor), 0);
   }
 
-  // Método para formatear el valor a moneda
   formatCurrency(value: number): string {
     return this.decimalPipe.transform(value, '1.0-0') || '';
   }
 
-  // Método para editar un campo de la tabla
-  editField(index: number, field: string) {
-    this.editingIndex = index;
-    this.editingField = field;
+  getGroupedIncomes(): { categoria: string; items: Income[] }[] {
+    const map = new Map<string, Income[]>();
+
+    for (const income of this.incomes) {
+      const cat = income.categoria;
+      if (!map.has(cat)) {
+        map.set(cat, []);
+      }
+      map.get(cat)!.push(income);
+    }
+
+    return Array.from(map.entries()).map(([categoria, items]) => ({ categoria, items }));
   }
 
-  // Método para guardar la edición
-  saveEdit() {
-    this.editingIndex = null;
-    this.editingField = '';
+  getGroupTotal(items: Income[]) {
+    return items.reduce((acc, item) => acc + (Number(item.valor) || 0), 0);
   }
 }

@@ -1,34 +1,54 @@
-// debts.service.ts
+// debt.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { Debt } from '../models/debt.model'; // Asegúrate que la ruta del import es correcta
+import { Observable, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
+import { Debt } from '../models/debt.model';
 
 @Injectable({
   providedIn: 'root'
 })
-export class DebtsService {
-  debts: any[] = [];
+export class DebtService {
+  private readonly MOCK_DATA_URL = '/assets/json/data.json';
+  private debtCache: Debt[] = [];
 
-  newDebt = {
-    acreedor: '',
-    fecha_deuda: '',
-    fecha_pago: '',
-    valor: 0,
-    estado: 'Pendiente'
-  };
+  constructor(private http: HttpClient) {}
 
-  constructor(private http: HttpClient) { }
-
-
-    // Método para cargar las deudas
-    loadDebts() {
-      this.http.get<any>('/assets/json/debts.json').subscribe({
-        next: (data) => {
-          this.debts = data.deudas;
-        }
-      });
+  getDebts(): Observable<Debt[]> {
+    if (this.debtCache.length > 0) {
+      return of(this.debtCache);
     }
 
+    return this.http.get<{ deudas: Debt[] }>(this.MOCK_DATA_URL).pipe(
+      map(response => {
+        this.debtCache = response.deudas;
+        return this.debtCache;
+      }),
+      catchError(error => {
+        console.error('[DebtService] Error al cargar deudas:', error);
+        return of([]);
+      })
+    );
+  }
+
+  addDebt(debt: Debt): Observable<Debt[]> {
+    this.debtCache.push(debt);
+    return of(this.debtCache);
+  }
+
+  updateDebt(index: number, updated: Debt): Observable<Debt[]> {
+    if (this.debtCache[index]) {
+      this.debtCache[index] = updated;
+    }
+    return of(this.debtCache);
+  }
+
+  deleteDebt(index: number): Observable<Debt[]> {
+    this.debtCache.splice(index, 1);
+    return of(this.debtCache);
+  }
+
+  clearCache(): void {
+    this.debtCache = [];
+  }
 }

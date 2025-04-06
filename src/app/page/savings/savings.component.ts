@@ -1,7 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { SavingsService } from '../../services/savings.service';
+import { Saving } from '../../models/savings.model';
 
 @Component({
   selector: 'app-savings',
@@ -12,73 +13,121 @@ import { FormsModule } from '@angular/forms';
   providers: [DecimalPipe]
 })
 export default class SavingsComponent implements OnInit {
-  // Inyección de dependencias
-  private http = inject(HttpClient);
+  // Servicios
+  private savingsService = inject(SavingsService);
   private decimalPipe = inject(DecimalPipe);
 
-  // Variables
-  savings: any[] = [];
-  isModalOpen: boolean = false;
+  // Datos
+  savings: Saving[] = [];
 
-  // Variables para edición
-  editingIndex: number | null = null;
-  editingField: string = '';
+  // Modales
+  isModalOpen = false;
+  isEditModalOpen = false;
 
-  // Nuevo ahorro
-  newSaving = {
-    tipo: '',
-    valor: 0
-  };
+  // Ahorro nuevo
+  newSaving: Saving = new Saving('', 0);
 
-  // Método para inicializar el componente
+  // Ahorro en edición
+  editedSaving: Saving = new Saving('', 0);
+  editedIndex: number | null = null;
+
   ngOnInit() {
     this.loadSavings();
   }
 
-  // Método para cargar los ahorros
+  // Obtener ahorros
   loadSavings() {
-    this.http.get<any>('/assets/json/savings.json').subscribe({
+    this.savingsService.getSavings().subscribe({
       next: (data) => {
-        this.savings = data.ahorros;
-      }
+        this.savings = data;
+      },
+      error: (err) => {
+        console.error('Error al cargar ahorros:', err);
+      },
     });
   }
 
-  // Método para abrir el modal
+  // ======================
+  // Modal: Agregar Ahorro
+  // ======================
   openModal() {
     this.isModalOpen = true;
   }
 
-  // Método para cerrar el modal
   closeModal() {
     this.isModalOpen = false;
+    this.newSaving = new Saving('', 0);
   }
 
-  // Método para agregar un ahorro
   addSaving() {
-    this.savings.push({ ...this.newSaving });
-    this.closeModal();
+    if (!this.newSaving.tipo) {
+      alert('Por favor completa todos los campos.');
+      return;
+    }
+
+    this.savingsService.addSaving({ ...this.newSaving }).subscribe({
+      next: (updatedList) => {
+        this.savings = updatedList;
+        this.closeModal();
+      },
+    });
   }
 
-  // Método para obtener el total de ahorros
+  // ======================
+  // Modal: Editar Ahorro
+  // ======================
+  openEditModal(index: number) {
+    const original = this.savings[index];
+    this.editedSaving = new Saving(original.tipo, original.valor);
+    this.editedIndex = index;
+    this.isEditModalOpen = true;
+  }
+
+  closeEditModal() {
+    this.isEditModalOpen = false;
+    this.editedSaving = new Saving('', 0);
+    this.editedIndex = null;
+  }
+
+  saveEditedSaving() {
+    if (this.editedIndex === null) return;
+
+    this.savingsService.updateSaving(this.editedIndex, { ...this.editedSaving }).subscribe({
+      next: (updatedList) => {
+        this.savings = updatedList;
+        this.closeEditModal();
+      },
+      error: (err) => {
+        console.error('Error al actualizar ahorro:', err);
+      },
+    });
+  }
+
+  // ======================
+  // Eliminar
+  // ======================
+  deleteSaving(index: number) {
+    const confirmDelete = confirm('¿Estás seguro de eliminar este ahorro?');
+    if (!confirmDelete) return;
+
+    this.savingsService.deleteSaving(index).subscribe({
+      next: (updatedList) => {
+        this.savings = updatedList;
+      },
+      error: (err) => {
+        console.error('Error al eliminar ahorro:', err);
+      },
+    });
+  }
+
+  // ======================
+  // Utilidades
+  // ======================
   getTotalSavings(): number {
-    return this.savings.reduce((sum, account) => sum + account.valor, 0);
+    return this.savings.reduce((sum, e) => sum + Number(e.valor), 0);
   }
 
-  // Método para dar formato a un número como moneda
   formatCurrency(value: number): string {
     return this.decimalPipe.transform(value, '1.0-0') || '';
-  }
-
-  // Método para editar un campo
-  editField(index: number, field: string) {
-    this.editingIndex = index;
-    this.editingField = field;
-  }
-
-  // Método para guardar la edición
-  saveEdit() {
-    this.editingIndex = null;
-    this.editingField = '';
   }
 }

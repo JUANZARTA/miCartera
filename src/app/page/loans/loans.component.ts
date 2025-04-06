@@ -1,7 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { LoanService } from '../../services/loan.service';
+import { Loan } from '../../models/loan.model';
 
 @Component({
   selector: 'app-loans',
@@ -12,103 +13,135 @@ import { FormsModule } from '@angular/forms';
   providers: [DecimalPipe],
 })
 export default class LoansComponent implements OnInit {
-  // Inyección de dependencias
-  private http = inject(HttpClient);
+  // Servicios
+  private loanService = inject(LoanService);
   private decimalPipe = inject(DecimalPipe);
 
-  // Variables
-  loans: any[] = [];
-  isModalOpen: boolean = false;  
+  // Datos
+  loans: Loan[] = [];
 
-  // Control de edición en la tabla
-  editingIndex: number | null = null;
-  editingField: string = '';
+  // Modales
+  isModalOpen = false;
+  isEditModalOpen = false;
 
-  // Objeto temporal para nuevos pré
-  newLoan = {
-    deudor: '',
-    fecha_prestamo: '',
-    fecha_pago: '',
-    valor: 0,
-    estado: 'Pendiente',
-  };
+  // Edición
+  editedLoan: Loan = new Loan('', '', '', 0, 'Pendiente');
+  editedIndex: number | null = null;
 
-  // Método para inicializar el componente
+  // Préstamo nuevo (modal)
+  newLoan: Loan = new Loan('', '', '', 0, 'Pendiente');
+
   ngOnInit() {
     this.loadLoans();
   }
 
-  // Cargar los préstamos desde el JSON
+  // ======================
+  // Obtener préstamos
+  // ======================
   loadLoans() {
-    this.http.get<any>('/assets/json/loans.json').subscribe({
+    this.loanService.getLoans().subscribe({
       next: (data) => {
-        this.loans = data.prestamos;
+        this.loans = data;
       },
       error: (err) => {
-        //console.error('Error al cargar los préstamos:', err);
+        console.error('Error al cargar préstamos:', err);
       },
     });
   }
 
-  // Abrir modal
+  // ======================
+  // Modal: Agregar Préstamo
+  // ======================
   openModal() {
     this.isModalOpen = true;
   }
 
-  // Cerrar modal y resetear formulario
   closeModal() {
     this.isModalOpen = false;
-    this.newLoan = {
-      deudor: '',
-      fecha_prestamo: '',
-      fecha_pago: '',
-      valor: 0,
-      estado: 'Pendiente',
-    };
+    this.newLoan = new Loan('', '', '', 0, 'Pendiente');
   }
 
-  // Agregar nuevo préstamo
   addLoan() {
-    if (
-      !this.newLoan.deudor ||
-      !this.newLoan.fecha_prestamo ||
-      !this.newLoan.fecha_pago ||
-      this.newLoan.valor <= 0
-    ) {
+    if (!this.newLoan.deudor || !this.newLoan.fecha_prestamo || !this.newLoan.fecha_pago || this.newLoan.valor <= 0) {
       alert('Por favor completa todos los campos.');
       return;
     }
 
-    this.loans.push({ ...this.newLoan });
-    this.closeModal();
+    this.loanService.addLoan({ ...this.newLoan }).subscribe({
+      next: (updatedList) => {
+        this.loans = updatedList;
+        this.closeModal();
+      },
+    });
   }
 
-  // Calcular total de préstamos pendientes
+  // ======================
+  // Modal: Editar Préstamo
+  // ======================
+  openEditModal(index: number) {
+    const original = this.loans[index];
+    this.editedLoan = new Loan(
+      original.deudor,
+      original.fecha_prestamo,
+      original.fecha_pago,
+      original.valor,
+      original.estado
+    );
+    this.editedIndex = index;
+    this.isEditModalOpen = true;
+  }
+
+  closeEditModal() {
+    this.isEditModalOpen = false;
+    this.editedLoan = new Loan('', '', '', 0, 'Pendiente');
+    this.editedIndex = null;
+  }
+
+  saveEditedLoan() {
+    if (this.editedIndex === null) return;
+
+    this.loanService.updateLoan(this.editedIndex, { ...this.editedLoan }).subscribe({
+      next: (updatedList) => {
+        this.loans = updatedList;
+        this.closeEditModal();
+      },
+      error: (err) => {
+        console.error('Error al actualizar préstamo:', err);
+      },
+    });
+  }
+
+  // ======================
+  // Eliminar
+  // ======================
+  deleteLoan(index: number) {
+    const confirmDelete = confirm('¿Estás seguro de eliminar este préstamo?');
+    if (!confirmDelete) return;
+
+    this.loanService.deleteLoan(index).subscribe({
+      next: (updatedList) => {
+        this.loans = updatedList;
+      },
+      error: (err) => {
+        console.error('Error al eliminar préstamo:', err);
+      },
+    });
+  }
+
+  togglePaymentStatus(loan: Loan) {
+    loan.estado = loan.estado === 'Pendiente' ? 'Pagado' : 'Pendiente';
+  }
+
+  // ======================
+  // Utilidades
+  // ======================
   getTotalPendingLoans(): number {
     return this.loans
       .filter((loan) => loan.estado === 'Pendiente')
       .reduce((sum, loan) => sum + Number(loan.valor), 0);
   }
 
-  // Formateo de moneda
   formatCurrency(value: number): string {
     return this.decimalPipe.transform(value, '1.0-0') || '';
-  }
-
-  // Activar edición en la tabla
-  editField(index: number, field: string) {
-    this.editingIndex = index;
-    this.editingField = field;
-  }
-
-  // Guardar cambios en la celda editada
-  saveEdit() {
-    this.editingIndex = null;
-    this.editingField = '';
-  }
-
-  // Método para cambiar el estado del préstamo
-  togglePaymentStatus(loan: any) {
-    loan.estado = loan.estado === 'Pendiente' ? 'Pagado' : 'Pendiente';
   }
 }
