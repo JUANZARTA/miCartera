@@ -8,62 +8,52 @@ import { Expense } from '../models/expense.model';
   providedIn: 'root'
 })
 export class ExpenseService {
-  // FUTURO: Cambiar esta URL por la de tu API (ej: 'https://api.tuservidor.com/expenses')
-  private readonly MOCK_DATA_URL = '/assets/json/data.json';
-
-  // Cache local temporal (solo en runtime)
-  private expensesCache: Expense[] = [];
+  private readonly FIREBASE_BASE_URL = 'https://micartera-acd5b-default-rtdb.firebaseio.com';
 
   constructor(private http: HttpClient) {}
 
-  // Obtener todos los gastos
-  getExpenses(): Observable<Expense[]> {
-    if (this.expensesCache.length > 0) {
-      return of(this.expensesCache);
-    }
-
-    return this.http.get<{ gastos: Expense[] }>(this.MOCK_DATA_URL).pipe(
-      map(response => {
-        this.expensesCache = response.gastos;
-        return this.expensesCache;
-      }),
+  // 🔹 GET: Obtener todos los gastos de un mes/año/usuario
+  getExpenses(userId: string, year: string, month: string): Observable<{ [key: string]: Expense }> {
+    const url = `${this.FIREBASE_BASE_URL}/${userId}/${year}/${month}/gastos.json`;
+    return this.http.get<{ [key: string]: Expense }>(url).pipe(
+      map(data => data || {}),
       catchError(error => {
-        console.error('[ExpenseService] Error al cargar los gastos:', error);
-        return of([]);
+        console.error('[GET] Error al obtener gastos:', error);
+        return of({});
       })
     );
   }
 
-  // Obtener un solo gasto por índice
-  getExpenseByIndex(index: number): Observable<Expense | undefined> {
-    return this.getExpenses().pipe(
-      map(gastos => gastos[index])
+  // 🔹 POST: Agregar un nuevo gasto
+  addExpense(userId: string, year: string, month: string, expense: Expense): Observable<any> {
+    const url = `${this.FIREBASE_BASE_URL}/${userId}/${year}/${month}/gastos.json`;
+    return this.http.post(url, expense).pipe(
+      catchError(error => {
+        console.error('[POST] Error al agregar gasto:', error);
+        return of(null);
+      })
     );
   }
 
-  // Agregar un gasto (solo en memoria)
-  addExpense(newExpense: Expense): Observable<Expense[]> {
-    this.expensesCache.push(newExpense);
-    return of(this.expensesCache);
+  // 🔹 PUT: Actualizar un gasto existente
+  updateExpense(userId: string, year: string, month: string, expenseId: string, expense: Expense): Observable<any> {
+    const url = `${this.FIREBASE_BASE_URL}/${userId}/${year}/${month}/gastos/${expenseId}.json`;
+    return this.http.put(url, expense).pipe(
+      catchError(error => {
+        console.error('[PUT] Error al actualizar gasto:', error);
+        return of(null);
+      })
+    );
   }
 
-  // Actualizar un gasto por índice (solo en memoria)
-  updateExpense(index: number, updatedExpense: Expense): Observable<Expense[]> {
-    if (this.expensesCache[index]) {
-      this.expensesCache[index] = updatedExpense;
-    }
-    return of(this.expensesCache);
+  // 🔹 DELETE: Eliminar un gasto
+  deleteExpense(userId: string, year: string, month: string, expenseId: string): Observable<any> {
+    const url = `${this.FIREBASE_BASE_URL}/${userId}/${year}/${month}/gastos/${expenseId}.json`;
+    return this.http.delete(url).pipe(
+      catchError(error => {
+        console.error('[DELETE] Error al eliminar gasto:', error);
+        return of(null);
+      })
+    );
   }
-
-  // Eliminar un gasto por índice (solo en memoria)
-  deleteExpense(index: number): Observable<Expense[]> {
-    this.expensesCache.splice(index, 1);
-    return of(this.expensesCache);
-  }
-
-  // Limpiar el cache (opcional)
-  clearCache(): void {
-    this.expensesCache = [];
-  }
-
 }

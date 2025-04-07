@@ -4,6 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { ExpenseService } from '../../services/expense.service';
 import { CategoriaGasto, Expense } from '../../models/expense.model';
 
+export interface ExpenseWithId extends Expense {
+  id: string;
+}
+
 @Component({
   selector: 'app-expense',
   standalone: true,
@@ -13,40 +17,33 @@ import { CategoriaGasto, Expense } from '../../models/expense.model';
   providers: [DecimalPipe],
 })
 export default class ExpenseComponent implements OnInit {
-  // Servicios
   private expenseService = inject(ExpenseService);
   private decimalPipe = inject(DecimalPipe);
 
-  // Datos
-  expenses: Expense[] = [];
+  expenses: ExpenseWithId[] = [];
 
   // Modales
   isModalOpen = false;
   isEditModalOpen = false;
 
-  // Edición inline (opcional)
-  editingIndex: number | null = null;
-  editingField = '';
-
-  // Categorías disponibles
   categorias: string[] = Object.values(CategoriaGasto);
 
-  // Gasto nuevo (modal)
   newExpense: Expense = new Expense('', CategoriaGasto.Variable, 0, 0);
-
-  // Gasto en edición (modal)
   editedExpense: Expense = new Expense('', CategoriaGasto.Variable, 0, 0);
-  editedIndex: number | null = null;
+  editedId: string | null = null;
+
+  readonly userId = 'UsorIijcpxfEymdA3uZrusvip0g2';
+  readonly year = '2024';
+  readonly month = '01';
 
   ngOnInit() {
     this.loadExpenses();
   }
 
-  // Obtener gastos desde el servicio
   loadExpenses() {
-    this.expenseService.getExpenses().subscribe({
+    this.expenseService.getExpenses(this.userId, this.year, this.month).subscribe({
       next: (data) => {
-        this.expenses = data;
+        this.expenses = Object.entries(data).map(([id, exp]) => ({ id, ...exp }));
       },
       error: (err) => {
         console.error('❌ Error al cargar gastos:', err);
@@ -54,9 +51,6 @@ export default class ExpenseComponent implements OnInit {
     });
   }
 
-  // ======================
-  // Modal: Agregar Gasto
-  // ======================
   openModal() {
     this.isModalOpen = true;
   }
@@ -72,71 +66,57 @@ export default class ExpenseComponent implements OnInit {
       return;
     }
 
-    this.expenseService.addExpense({ ...this.newExpense }).subscribe({
-      next: (updatedExpenses) => {
-        this.expenses = updatedExpenses;
+    this.expenseService.addExpense(this.userId, this.year, this.month, this.newExpense).subscribe({
+      next: () => {
+        this.loadExpenses(); // Recargar
         this.closeModal();
       },
     });
   }
 
-  // ======================
-  // Modal: Editar Gasto
-  // ======================
-  openEditModal(index: number) {
-    const original = this.expenses[index];
+  openEditModal(id: string) {
+    const original = this.expenses.find(e => e.id === id);
+    if (!original) return;
+
     this.editedExpense = new Expense(
       original.descripcion,
       original.categoria,
       original.valor,
       original.estimacion
     );
-    this.editedIndex = index;
+    this.editedId = id;
     this.isEditModalOpen = true;
   }
 
   closeEditModal() {
     this.isEditModalOpen = false;
     this.editedExpense = new Expense('', CategoriaGasto.Variable, 0, 0);
-    this.editedIndex = null;
+    this.editedId = null;
   }
 
   saveEditedExpense() {
-    if (this.editedIndex === null) return;
+    if (!this.editedId) return;
 
     this.expenseService
-      .updateExpense(this.editedIndex, { ...this.editedExpense })
+      .updateExpense(this.userId, this.year, this.month, this.editedId, this.editedExpense)
       .subscribe({
-        next: (updatedExpenses) => {
-          this.expenses = updatedExpenses;
+        next: () => {
+          this.loadExpenses();
           this.closeEditModal();
-        },
-        error: (err) => {
-          console.error('❌ Error al guardar edición:', err);
         },
       });
   }
 
-  // ======================
-  // Eliminar
-  // ======================
-  deleteExpense(index: number) {
-    const confirmDelete = confirm('¿Estás seguro de eliminar este gasto?');
-    if (!confirmDelete) return;
+  deleteExpense(id: string) {
+    if (!confirm('¿Estás seguro de eliminar este gasto?')) return;
 
-    this.expenseService.deleteExpense(index).subscribe({
-      next: (updatedExpenses) => {
-        this.expenses = updatedExpenses;
-      },
-      error: (err) => {
-        console.error('❌ Error al eliminar el gasto:', err);
+    this.expenseService.deleteExpense(this.userId, this.year, this.month, id).subscribe({
+      next: () => {
+        this.loadExpenses();
       },
     });
   }
 
-  // ======================
-  // Utilidades
-  // ======================
   getTotalExpenses(): number {
     return this.expenses.reduce((sum, e) => sum + Number(e.valor), 0);
   }
@@ -153,8 +133,8 @@ export default class ExpenseComponent implements OnInit {
     return Number(expense.valor) > Number(expense.estimacion);
   }
 
-  getGroupedExpenses(): { categoria: string; items: Expense[] }[] {
-    const map = new Map<string, Expense[]>();
+  getGroupedExpenses(): { categoria: string; items: ExpenseWithId[] }[] {
+    const map = new Map<string, ExpenseWithId[]>();
 
     for (const exp of this.expenses) {
       const cat = exp.categoria;
@@ -177,30 +157,5 @@ export default class ExpenseComponent implements OnInit {
 
   getTotalEstimations() {
     return this.expenses.reduce((acc, item) => acc + (Number(item.estimacion) || 0), 0);
-  }
-
-  // (Opcional) Edición inline
-  editField(index: number, field: string) {
-    this.editingIndex = index;
-    this.editingField = field;
-  }
-
-  saveEdit() {
-    if (this.editingIndex !== null && this.editingField) {
-      const updatedExpense = this.expenses[this.editingIndex];
-      this.expenseService
-        .updateExpense(this.editingIndex, updatedExpense)
-        .subscribe({
-          next: (updatedList) => {
-            this.expenses = updatedList;
-          },
-          error: (err) => {
-            console.error('❌ Error al actualizar gasto:', err);
-          },
-        });
-    }
-
-    this.editingIndex = null;
-    this.editingField = '';
   }
 }

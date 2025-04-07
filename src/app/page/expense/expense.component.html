@@ -53,13 +53,13 @@
                   </td>
                   <td class="py-2 px-4 text-center">
                     <button
-                      (click)="openEditModal(expenses.indexOf(expense))"
+                      (click)="openEditModal(expense.id)"
                       class="text-blue-600 mr-2"
                     >
                       ✏️
                     </button>
                     <button
-                      (click)="deleteExpense(expenses.indexOf(expense))"
+                      (click)="deleteExpense(expense.id)"
                       class="text-red-600"
                     >
                       🗑️

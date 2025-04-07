@@ -13,4 +13,7 @@ export enum CategoriaGasto {
       public estimacion: number
     ) {}
   }
+  export interface ExpenseWithId extends Expense {
+    id: string;
+  }
   
