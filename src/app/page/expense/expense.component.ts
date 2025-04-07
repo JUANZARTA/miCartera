@@ -22,7 +22,7 @@ export default class ExpenseComponent implements OnInit {
 
   expenses: ExpenseWithId[] = [];
 
-  // Modales
+  // Modales 
   isModalOpen = false;
   isEditModalOpen = false;
 
@@ -36,10 +36,12 @@ export default class ExpenseComponent implements OnInit {
   readonly year = '2024';
   readonly month = '01';
 
+  // Variables para el gráfico
   ngOnInit() {
     this.loadExpenses();
   }
 
+  // Método para cargar los gastos
   loadExpenses() {
     this.expenseService.getExpenses(this.userId, this.year, this.month).subscribe({
       next: (data) => {
@@ -51,15 +53,18 @@ export default class ExpenseComponent implements OnInit {
     });
   }
 
+  // Métodos para abrir y cerrar modales
   openModal() {
     this.isModalOpen = true;
   }
 
+  // Método para cerrar el modal
   closeModal() {
     this.isModalOpen = false;
     this.newExpense = new Expense('', CategoriaGasto.Variable, 0, 0);
   }
 
+  // Método para agregar un nuevo gasto
   addExpense() {
     if (!this.newExpense.descripcion || !this.newExpense.categoria) {
       alert('Por favor completa todos los campos.');
@@ -74,6 +79,7 @@ export default class ExpenseComponent implements OnInit {
     });
   }
 
+  // Métodos para editar y eliminar gastos
   openEditModal(id: string) {
     const original = this.expenses.find(e => e.id === id);
     if (!original) return;
@@ -88,12 +94,14 @@ export default class ExpenseComponent implements OnInit {
     this.isEditModalOpen = true;
   }
 
+  // Método para cerrar el modal de edición
   closeEditModal() {
     this.isEditModalOpen = false;
     this.editedExpense = new Expense('', CategoriaGasto.Variable, 0, 0);
     this.editedId = null;
   }
 
+  // Método para guardar los cambios de edición
   saveEditedExpense() {
     if (!this.editedId) return;
 
@@ -107,6 +115,7 @@ export default class ExpenseComponent implements OnInit {
       });
   }
 
+  // Método para eliminar un gasto
   deleteExpense(id: string) {
     if (!confirm('¿Estás seguro de eliminar este gasto?')) return;
 
@@ -117,22 +126,27 @@ export default class ExpenseComponent implements OnInit {
     });
   }
 
+  // Método para eliminar todos los gastos
   getTotalExpenses(): number {
     return this.expenses.reduce((sum, e) => sum + Number(e.valor), 0);
   }
 
+  // Método para obtener el total estimado de gastos
   getTotalEstimated(): number {
     return this.expenses.reduce((sum, e) => sum + Number(e.estimacion), 0);
   }
 
+  // Método para formatear el valor a moneda
   formatCurrency(value: number): string {
     return this.decimalPipe.transform(value, '1.0-0') || '';
   }
 
+  // Método para formatear el valor a porcentaje
   isOverBudget(expense: Expense): boolean {
     return Number(expense.valor) > Number(expense.estimacion);
   }
 
+  // Método para formatear el valor a porcentaje
   getGroupedExpenses(): { categoria: string; items: ExpenseWithId[] }[] {
     const map = new Map<string, ExpenseWithId[]>();
 
@@ -147,14 +161,17 @@ export default class ExpenseComponent implements OnInit {
     return Array.from(map.entries()).map(([categoria, items]) => ({ categoria, items }));
   }
 
+  // Método para calcular el total por categoría
   getGroupTotal(items: any[]) {
     return items.reduce((acc, item) => acc + (Number(item.valor) || 0), 0);
   }
 
+  // Método para calcular el total estimado por categoría
   getGroupEstimatedTotal(items: any[]) {
     return items.reduce((acc, item) => acc + (Number(item.estimacion) || 0), 0);
   }
 
+  // Método para calcular el total de estimaciones
   getTotalEstimations() {
     return this.expenses.reduce((acc, item) => acc + (Number(item.estimacion) || 0), 0);
   }
