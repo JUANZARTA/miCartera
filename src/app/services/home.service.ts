@@ -5,7 +5,7 @@ import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { WalletAccount } from '../models/wallet.model';
 import { Debt } from '../models/debt.model';
-import { Loan } from '../models/loan.model';
+import { Loan } from '../models/loans.model';
 
 @Injectable({
   providedIn: 'root'
