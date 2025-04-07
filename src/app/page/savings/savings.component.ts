@@ -4,6 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { SavingsService } from '../../services/savings.service';
 import { Saving } from '../../models/savings.model';
 
+export interface SavingWithId extends Saving {
+  id: string;
+}
+
 @Component({
   selector: 'app-savings',
   standalone: true,
@@ -18,7 +22,7 @@ export default class SavingsComponent implements OnInit {
   private decimalPipe = inject(DecimalPipe);
 
   // Datos
-  savings: Saving[] = [];
+  savings: SavingWithId[] = [];
 
   // Modales
   isModalOpen = false;
@@ -29,7 +33,11 @@ export default class SavingsComponent implements OnInit {
 
   // Ahorro en edición
   editedSaving: Saving = new Saving('', 0);
-  editedIndex: number | null = null;
+  editedId: string | null = null;
+
+  readonly userId = 'UsorIijcpxfEymdA3uZrusvip0g2';
+  readonly year = '2024';
+  readonly month = '01';
 
   ngOnInit() {
     this.loadSavings();
@@ -37,9 +45,9 @@ export default class SavingsComponent implements OnInit {
 
   // Obtener ahorros
   loadSavings() {
-    this.savingsService.getSavings().subscribe({
+    this.savingsService.getSavings(this.userId, this.year, this.month).subscribe({
       next: (data) => {
-        this.savings = data;
+        this.savings = Object.entries(data).map(([id, s]) => ({ id, ...s }));
       },
       error: (err) => {
         console.error('Error al cargar ahorros:', err);
@@ -65,9 +73,9 @@ export default class SavingsComponent implements OnInit {
       return;
     }
 
-    this.savingsService.addSaving({ ...this.newSaving }).subscribe({
-      next: (updatedList) => {
-        this.savings = updatedList;
+    this.savingsService.addSaving(this.userId, this.year, this.month, this.newSaving).subscribe({
+      next: () => {
+        this.loadSavings();
         this.closeModal();
       },
     });
@@ -76,25 +84,27 @@ export default class SavingsComponent implements OnInit {
   // ======================
   // Modal: Editar Ahorro
   // ======================
-  openEditModal(index: number) {
-    const original = this.savings[index];
+  openEditModal(id: string) {
+    const original = this.savings.find(s => s.id === id);
+    if (!original) return;
+
     this.editedSaving = new Saving(original.tipo, original.valor);
-    this.editedIndex = index;
+    this.editedId = id;
     this.isEditModalOpen = true;
   }
 
   closeEditModal() {
     this.isEditModalOpen = false;
     this.editedSaving = new Saving('', 0);
-    this.editedIndex = null;
+    this.editedId = null;
   }
 
   saveEditedSaving() {
-    if (this.editedIndex === null) return;
+    if (!this.editedId) return;
 
-    this.savingsService.updateSaving(this.editedIndex, { ...this.editedSaving }).subscribe({
-      next: (updatedList) => {
-        this.savings = updatedList;
+    this.savingsService.updateSaving(this.userId, this.year, this.month, this.editedId, this.editedSaving).subscribe({
+      next: () => {
+        this.loadSavings();
         this.closeEditModal();
       },
       error: (err) => {
@@ -106,13 +116,13 @@ export default class SavingsComponent implements OnInit {
   // ======================
   // Eliminar
   // ======================
-  deleteSaving(index: number) {
+  deleteSaving(id: string) {
     const confirmDelete = confirm('¿Estás seguro de eliminar este ahorro?');
     if (!confirmDelete) return;
 
-    this.savingsService.deleteSaving(index).subscribe({
-      next: (updatedList) => {
-        this.savings = updatedList;
+    this.savingsService.deleteSaving(this.userId, this.year, this.month, id).subscribe({
+      next: () => {
+        this.loadSavings();
       },
       error: (err) => {
         console.error('Error al eliminar ahorro:', err);

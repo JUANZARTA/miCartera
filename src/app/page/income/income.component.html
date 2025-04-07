@@ -4,7 +4,7 @@
   >
     <!-- Encabezado -->
     <div
-      class="flex items-center justify-between p-6 bg-gradient-to-r from-blue-700 to-teal-500 text-white rounded-t-xl shadow-md"
+      class="flex items-center justify-between p-6 bg-gradient-to-r from-green-700 to-emerald-500 text-white rounded-t-xl shadow-md"
     >
       <div>
         <h6 class="text-xl font-bold tracking-wide">Tabla de Ingresos</h6>
@@ -23,7 +23,7 @@
           class="border border-gray-300 rounded-md"
         >
           <summary
-            class="bg-gradient-to-r from-cyan-600 to-blue-500 text-white cursor-pointer p-4 font-bold select-none"
+            class="bg-gradient-to-r from-emerald-600 to-green-500 text-white cursor-pointer p-4 font-bold select-none"
           >
             {{ grupo.categoria }} ({{ grupo.items.length }} ingresos)
           </summary>
@@ -48,13 +48,13 @@
                   </td>
                   <td class="py-2 px-4 text-center">
                     <button
-                      (click)="openEditModal(incomes.indexOf(income))"
+                      (click)="openEditModal(income.id)"
                       class="text-blue-600 mr-2"
                     >
                       ✏️
                     </button>
                     <button
-                      (click)="deleteIncome(incomes.indexOf(income))"
+                      (click)="deleteIncome(income.id)"
                       class="text-red-600"
                     >
                       🗑️
@@ -63,7 +63,7 @@
                 </tr>
 
                 <!-- Total por categoría -->
-                <tr class="bg-blue-50 font-bold text-blue-900">
+                <tr class="bg-green-50 font-bold text-green-900">
                   <td class="py-2 px-4 text-left">Total {{ grupo.categoria }}</td>
                   <td class="py-2 px-4 text-right">
                     ${{ formatCurrency(getGroupTotal(grupo.items)) }}
@@ -80,7 +80,7 @@
       <div class="overflow-x-auto mt-4">
         <table class="w-full min-w-[640px] border-collapse">
           <tbody>
-            <tr class="bg-blue-100 font-bold text-blue-900 border-t">
+            <tr class="bg-green-100 font-bold text-green-900 border-t">
               <td class="py-3 px-4 text-left">Totales Generales</td>
               <td class="py-3 px-4 text-right">
                 ${{ formatCurrency(getTotalIncome()) }}
@@ -96,7 +96,7 @@
     <div class="flex justify-end p-4">
       <button
         (click)="openModal()"
-        class="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-teal-500 transition"
+        class="bg-green-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-emerald-500 transition"
       >
         Agregar Ingreso +
       </button>

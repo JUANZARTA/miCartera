@@ -1,4 +1,3 @@
-// income.model.ts
 export enum CategoriaIngreso {
   Fijo = 'Fijo',
   Variable = 'Variable',
@@ -11,4 +10,8 @@ export class Income {
     public categoria: CategoriaIngreso,
     public valor: number
   ) {}
+}
+
+export interface IncomeWithId extends Income {
+  id: string;
 }

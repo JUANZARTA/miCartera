@@ -1,4 +1,3 @@
-// savings.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
@@ -9,46 +8,52 @@ import { Saving } from '../models/savings.model';
   providedIn: 'root'
 })
 export class SavingsService {
-  private readonly MOCK_DATA_URL = '/assets/json/data.json';
-  private savingsCache: Saving[] = [];
+  private readonly FIREBASE_BASE_URL = 'https://micartera-acd5b-default-rtdb.firebaseio.com';
 
   constructor(private http: HttpClient) {}
 
-  getSavings(): Observable<Saving[]> {
-    if (this.savingsCache.length > 0) {
-      return of(this.savingsCache);
-    }
-
-    return this.http.get<{ ahorros: Saving[] }>(this.MOCK_DATA_URL).pipe(
-      map(response => {
-        this.savingsCache = response.ahorros;
-        return this.savingsCache;
-      }),
+  // 🔹 GET: Obtener ahorros
+  getSavings(userId: string, year: string, month: string): Observable<{ [key: string]: Saving }> {
+    const url = `${this.FIREBASE_BASE_URL}/${userId}/${year}/${month}/ahorros.json`;
+    return this.http.get<{ [key: string]: Saving }>(url).pipe(
+      map(data => data || {}),
       catchError(error => {
-        console.error('[SavingsService] Error al cargar ahorros:', error);
-        return of([]);
+        console.error('[GET] Error al obtener ahorros:', error);
+        return of({});
       })
     );
   }
 
-  addSaving(saving: Saving): Observable<Saving[]> {
-    this.savingsCache.push(saving);
-    return of(this.savingsCache);
+  // 🔹 POST: Agregar ahorro
+  addSaving(userId: string, year: string, month: string, saving: Saving): Observable<any> {
+    const url = `${this.FIREBASE_BASE_URL}/${userId}/${year}/${month}/ahorros.json`;
+    return this.http.post(url, saving).pipe(
+      catchError(error => {
+        console.error('[POST] Error al agregar ahorro:', error);
+        return of(null);
+      })
+    );
   }
 
-  updateSaving(index: number, updated: Saving): Observable<Saving[]> {
-    if (this.savingsCache[index]) {
-      this.savingsCache[index] = updated;
-    }
-    return of(this.savingsCache);
+  // 🔹 PUT: Actualizar ahorro
+  updateSaving(userId: string, year: string, month: string, savingId: string, saving: Saving): Observable<any> {
+    const url = `${this.FIREBASE_BASE_URL}/${userId}/${year}/${month}/ahorros/${savingId}.json`;
+    return this.http.put(url, saving).pipe(
+      catchError(error => {
+        console.error('[PUT] Error al actualizar ahorro:', error);
+        return of(null);
+      })
+    );
   }
 
-  deleteSaving(index: number): Observable<Saving[]> {
-    this.savingsCache.splice(index, 1);
-    return of(this.savingsCache);
-  }
-
-  clearCache(): void {
-    this.savingsCache = [];
+  // 🔹 DELETE: Eliminar ahorro
+  deleteSaving(userId: string, year: string, month: string, savingId: string): Observable<any> {
+    const url = `${this.FIREBASE_BASE_URL}/${userId}/${year}/${month}/ahorros/${savingId}.json`;
+    return this.http.delete(url).pipe(
+      catchError(error => {
+        console.error('[DELETE] Error al eliminar ahorro:', error);
+        return of(null);
+      })
+    );
   }
 }

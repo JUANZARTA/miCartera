@@ -4,6 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { DebtService } from '../../services/debts.service';
 import { Debt } from '../../models/debt.model';
 
+export interface DebtWithId extends Debt {
+  id: string;
+}
+
 @Component({
   selector: 'app-debts',
   standalone: true,
@@ -18,7 +22,7 @@ export default class DebtsComponent implements OnInit {
   private decimalPipe = inject(DecimalPipe);
 
   // Datos
-  debts: Debt[] = [];
+  debts: DebtWithId[] = [];
 
   // Modales
   isModalOpen = false;
@@ -26,10 +30,14 @@ export default class DebtsComponent implements OnInit {
 
   // Edición
   editedDebt: Debt = new Debt('', '', '', 0, 'Pendiente');
-  editedIndex: number | null = null;
+  editedId: string | null = null;
 
   // Deuda nueva
   newDebt: Debt = new Debt('', '', '', 0, 'Pendiente');
+
+  readonly userId = 'UsorIijcpxfEymdA3uZrusvip0g2';
+  readonly year = '2024';
+  readonly month = '01';
 
   ngOnInit() {
     this.loadDebts();
@@ -39,9 +47,9 @@ export default class DebtsComponent implements OnInit {
   // Obtener deudas
   // ======================
   loadDebts() {
-    this.debtService.getDebts().subscribe({
+    this.debtService.getDebts(this.userId, this.year, this.month).subscribe({
       next: (data) => {
-        this.debts = data;
+        this.debts = Object.entries(data).map(([id, d]) => ({ id, ...d }));
       },
       error: (err) => {
         console.error('Error al cargar deudas:', err);
@@ -67,9 +75,9 @@ export default class DebtsComponent implements OnInit {
       return;
     }
 
-    this.debtService.addDebt({ ...this.newDebt }).subscribe({
-      next: (updatedList) => {
-        this.debts = updatedList;
+    this.debtService.addDebt(this.userId, this.year, this.month, { ...this.newDebt }).subscribe({
+      next: () => {
+        this.loadDebts();
         this.closeModal();
       }
     });
@@ -78,8 +86,10 @@ export default class DebtsComponent implements OnInit {
   // ======================
   // Modal: Editar Deuda
   // ======================
-  openEditModal(index: number) {
-    const original = this.debts[index];
+  openEditModal(id: string) {
+    const original = this.debts.find(d => d.id === id);
+    if (!original) return;
+
     this.editedDebt = new Debt(
       original.acreedor,
       original.fecha_deuda,
@@ -87,22 +97,22 @@ export default class DebtsComponent implements OnInit {
       original.valor,
       original.estado
     );
-    this.editedIndex = index;
+    this.editedId = id;
     this.isEditModalOpen = true;
   }
 
   closeEditModal() {
     this.isEditModalOpen = false;
     this.editedDebt = new Debt('', '', '', 0, 'Pendiente');
-    this.editedIndex = null;
+    this.editedId = null;
   }
 
   saveEditedDebt() {
-    if (this.editedIndex === null) return;
+    if (!this.editedId) return;
 
-    this.debtService.updateDebt(this.editedIndex, { ...this.editedDebt }).subscribe({
-      next: (updatedList) => {
-        this.debts = updatedList;
+    this.debtService.updateDebt(this.userId, this.year, this.month, this.editedId, this.editedDebt).subscribe({
+      next: () => {
+        this.loadDebts();
         this.closeEditModal();
       },
       error: (err) => {
@@ -114,13 +124,13 @@ export default class DebtsComponent implements OnInit {
   // ======================
   // Eliminar
   // ======================
-  deleteDebt(index: number) {
+  deleteDebt(id: string) {
     const confirmDelete = confirm('¿Estás seguro de eliminar esta deuda?');
     if (!confirmDelete) return;
 
-    this.debtService.deleteDebt(index).subscribe({
-      next: (updatedList) => {
-        this.debts = updatedList;
+    this.debtService.deleteDebt(this.userId, this.year, this.month, id).subscribe({
+      next: () => {
+        this.loadDebts();
       },
       error: (err) => {
         console.error('Error al eliminar deuda:', err);
@@ -131,7 +141,7 @@ export default class DebtsComponent implements OnInit {
   // ======================
   // Estado
   // ======================
-  togglePaymentStatus(debt: Debt) {
+  togglePaymentStatus(debt: DebtWithId) {
     debt.estado = debt.estado === 'Pendiente' ? 'Pagado' : 'Pendiente';
   }
 

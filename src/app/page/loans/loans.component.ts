@@ -1,8 +1,12 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { LoanService } from '../../services/loan.service';
-import { Loan } from '../../models/loan.model';
+import { LoanService } from '../../services/loans.service';
+import { Loan } from '../../models/loans.model';
+
+export interface LoanWithId extends Loan {
+  id: string;
+}
 
 @Component({
   selector: 'app-loans',
@@ -18,7 +22,7 @@ export default class LoansComponent implements OnInit {
   private decimalPipe = inject(DecimalPipe);
 
   // Datos
-  loans: Loan[] = [];
+  loans: LoanWithId[] = [];
 
   // Modales
   isModalOpen = false;
@@ -26,10 +30,14 @@ export default class LoansComponent implements OnInit {
 
   // Edición
   editedLoan: Loan = new Loan('', '', '', 0, 'Pendiente');
-  editedIndex: number | null = null;
+  editedId: string | null = null;
 
   // Préstamo nuevo (modal)
   newLoan: Loan = new Loan('', '', '', 0, 'Pendiente');
+
+  readonly userId = 'UsorIijcpxfEymdA3uZrusvip0g2';
+  readonly year = '2024';
+  readonly month = '01';
 
   ngOnInit() {
     this.loadLoans();
@@ -39,9 +47,9 @@ export default class LoansComponent implements OnInit {
   // Obtener préstamos
   // ======================
   loadLoans() {
-    this.loanService.getLoans().subscribe({
+    this.loanService.getLoans(this.userId, this.year, this.month).subscribe({
       next: (data) => {
-        this.loans = data;
+        this.loans = Object.entries(data).map(([id, loan]) => ({ id, ...loan }));
       },
       error: (err) => {
         console.error('Error al cargar préstamos:', err);
@@ -67,9 +75,9 @@ export default class LoansComponent implements OnInit {
       return;
     }
 
-    this.loanService.addLoan({ ...this.newLoan }).subscribe({
-      next: (updatedList) => {
-        this.loans = updatedList;
+    this.loanService.addLoan(this.userId, this.year, this.month, this.newLoan).subscribe({
+      next: () => {
+        this.loadLoans();
         this.closeModal();
       },
     });
@@ -78,8 +86,10 @@ export default class LoansComponent implements OnInit {
   // ======================
   // Modal: Editar Préstamo
   // ======================
-  openEditModal(index: number) {
-    const original = this.loans[index];
+  openEditModal(id: string) {
+    const original = this.loans.find(l => l.id === id);
+    if (!original) return;
+
     this.editedLoan = new Loan(
       original.deudor,
       original.fecha_prestamo,
@@ -87,22 +97,22 @@ export default class LoansComponent implements OnInit {
       original.valor,
       original.estado
     );
-    this.editedIndex = index;
+    this.editedId = id;
     this.isEditModalOpen = true;
   }
 
   closeEditModal() {
     this.isEditModalOpen = false;
     this.editedLoan = new Loan('', '', '', 0, 'Pendiente');
-    this.editedIndex = null;
+    this.editedId = null;
   }
 
   saveEditedLoan() {
-    if (this.editedIndex === null) return;
+    if (!this.editedId) return;
 
-    this.loanService.updateLoan(this.editedIndex, { ...this.editedLoan }).subscribe({
-      next: (updatedList) => {
-        this.loans = updatedList;
+    this.loanService.updateLoan(this.userId, this.year, this.month, this.editedId, this.editedLoan).subscribe({
+      next: () => {
+        this.loadLoans();
         this.closeEditModal();
       },
       error: (err) => {
@@ -114,13 +124,13 @@ export default class LoansComponent implements OnInit {
   // ======================
   // Eliminar
   // ======================
-  deleteLoan(index: number) {
+  deleteLoan(id: string) {
     const confirmDelete = confirm('¿Estás seguro de eliminar este préstamo?');
     if (!confirmDelete) return;
 
-    this.loanService.deleteLoan(index).subscribe({
-      next: (updatedList) => {
-        this.loans = updatedList;
+    this.loanService.deleteLoan(this.userId, this.year, this.month, id).subscribe({
+      next: () => {
+        this.loadLoans();
       },
       error: (err) => {
         console.error('Error al eliminar préstamo:', err);
@@ -128,7 +138,7 @@ export default class LoansComponent implements OnInit {
     });
   }
 
-  togglePaymentStatus(loan: Loan) {
+  togglePaymentStatus(loan: LoanWithId) {
     loan.estado = loan.estado === 'Pendiente' ? 'Pagado' : 'Pendiente';
   }
 

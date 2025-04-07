@@ -1,4 +1,3 @@
-// wallet.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
@@ -9,46 +8,52 @@ import { WalletAccount } from '../models/wallet.model';
   providedIn: 'root'
 })
 export class WalletService {
-  private readonly MOCK_DATA_URL = '/assets/json/data.json';
-  private walletCache: WalletAccount[] = [];
+  private readonly FIREBASE_BASE_URL = 'https://micartera-acd5b-default-rtdb.firebaseio.com';
 
   constructor(private http: HttpClient) {}
 
-  getWallet(): Observable<WalletAccount[]> {
-    if (this.walletCache.length > 0) {
-      return of(this.walletCache);
-    }
-
-    return this.http.get<{ cartera: WalletAccount[] }>(this.MOCK_DATA_URL).pipe(
-      map(response => {
-        this.walletCache = response.cartera;
-        return this.walletCache;
-      }),
+  // 🔹 GET: Obtener cuentas de cartera
+  getWallet(userId: string, year: string, month: string): Observable<{ [key: string]: WalletAccount }> {
+    const url = `${this.FIREBASE_BASE_URL}/${userId}/${year}/${month}/cartera.json`;
+    return this.http.get<{ [key: string]: WalletAccount }>(url).pipe(
+      map(data => data || {}),
       catchError(error => {
-        console.error('[WalletService] Error al cargar cartera:', error);
-        return of([]);
+        console.error('[GET] Error al obtener cartera:', error);
+        return of({});
       })
     );
   }
 
-  addAccount(account: WalletAccount): Observable<WalletAccount[]> {
-    this.walletCache.push(account);
-    return of(this.walletCache);
+  // 🔹 POST: Agregar cuenta nueva
+  addAccount(userId: string, year: string, month: string, account: WalletAccount): Observable<any> {
+    const url = `${this.FIREBASE_BASE_URL}/${userId}/${year}/${month}/cartera.json`;
+    return this.http.post(url, account).pipe(
+      catchError(error => {
+        console.error('[POST] Error al agregar cuenta:', error);
+        return of(null);
+      })
+    );
   }
 
-  updateAccount(index: number, updated: WalletAccount): Observable<WalletAccount[]> {
-    if (this.walletCache[index]) {
-      this.walletCache[index] = updated;
-    }
-    return of(this.walletCache);
+  // 🔹 PUT: Actualizar cuenta existente
+  updateAccount(userId: string, year: string, month: string, accountId: string, account: WalletAccount): Observable<any> {
+    const url = `${this.FIREBASE_BASE_URL}/${userId}/${year}/${month}/cartera/${accountId}.json`;
+    return this.http.put(url, account).pipe(
+      catchError(error => {
+        console.error('[PUT] Error al actualizar cuenta:', error);
+        return of(null);
+      })
+    );
   }
 
-  deleteAccount(index: number): Observable<WalletAccount[]> {
-    this.walletCache.splice(index, 1);
-    return of(this.walletCache);
-  }
-
-  clearCache(): void {
-    this.walletCache = [];
+  // 🔹 DELETE: Eliminar cuenta
+  deleteAccount(userId: string, year: string, month: string, accountId: string): Observable<any> {
+    const url = `${this.FIREBASE_BASE_URL}/${userId}/${year}/${month}/cartera/${accountId}.json`;
+    return this.http.delete(url).pipe(
+      catchError(error => {
+        console.error('[DELETE] Error al eliminar cuenta:', error);
+        return of(null);
+      })
+    );
   }
 }

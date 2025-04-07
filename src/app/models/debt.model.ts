@@ -1,4 +1,3 @@
-// debt.model.ts
 export class Debt {
   constructor(
     public acreedor: string,
@@ -7,4 +6,8 @@ export class Debt {
     public valor: number,
     public estado: 'Pendiente' | 'Pagado'
   ) {}
+}
+
+export interface DebtWithId extends Debt {
+  id: string;
 }

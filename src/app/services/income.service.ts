@@ -1,4 +1,3 @@
-// income.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
@@ -9,52 +8,52 @@ import { Income } from '../models/income.model';
   providedIn: 'root'
 })
 export class IncomeService {
-  private readonly MOCK_DATA_URL = '/assets/json/data.json';
-  private incomesCache: Income[] = [];
+  private readonly FIREBASE_BASE_URL = 'https://micartera-acd5b-default-rtdb.firebaseio.com';
 
   constructor(private http: HttpClient) {}
 
-  getIncomes(): Observable<Income[]> {
-    if (this.incomesCache.length > 0) {
-      return of(this.incomesCache);
-    }
-
-    return this.http.get<{ ingresos: Income[] }>(this.MOCK_DATA_URL).pipe(
-      map(response => {
-        this.incomesCache = response.ingresos;
-        return this.incomesCache;
-      }),
+  // 🔹 GET: Obtener todos los ingresos de un mes/año/usuario
+  getIncomes(userId: string, year: string, month: string): Observable<{ [key: string]: Income }> {
+    const url = `${this.FIREBASE_BASE_URL}/${userId}/${year}/${month}/ingresos.json`;
+    return this.http.get<{ [key: string]: Income }>(url).pipe(
+      map(data => data || {}),
       catchError(error => {
-        console.error('[IncomeService] Error al cargar ingresos:', error);
-        return of([]);
+        console.error('[GET] Error al obtener ingresos:', error);
+        return of({});
       })
     );
   }
 
-  getIncomeByIndex(index: number): Observable<Income | undefined> {
-    return this.getIncomes().pipe(
-      map(incomes => incomes[index])
+  // 🔹 POST: Agregar un nuevo ingreso
+  addIncome(userId: string, year: string, month: string, income: Income): Observable<any> {
+    const url = `${this.FIREBASE_BASE_URL}/${userId}/${year}/${month}/ingresos.json`;
+    return this.http.post(url, income).pipe(
+      catchError(error => {
+        console.error('[POST] Error al agregar ingreso:', error);
+        return of(null);
+      })
     );
   }
 
-  addIncome(newIncome: Income): Observable<Income[]> {
-    this.incomesCache.push(newIncome);
-    return of(this.incomesCache);
+  // 🔹 PUT: Actualizar un ingreso existente
+  updateIncome(userId: string, year: string, month: string, incomeId: string, income: Income): Observable<any> {
+    const url = `${this.FIREBASE_BASE_URL}/${userId}/${year}/${month}/ingresos/${incomeId}.json`;
+    return this.http.put(url, income).pipe(
+      catchError(error => {
+        console.error('[PUT] Error al actualizar ingreso:', error);
+        return of(null);
+      })
+    );
   }
 
-  updateIncome(index: number, updatedIncome: Income): Observable<Income[]> {
-    if (this.incomesCache[index]) {
-      this.incomesCache[index] = updatedIncome;
-    }
-    return of(this.incomesCache);
-  }
-
-  deleteIncome(index: number): Observable<Income[]> {
-    this.incomesCache.splice(index, 1);
-    return of(this.incomesCache);
-  }
-
-  clearCache(): void {
-    this.incomesCache = [];
+  // 🔹 DELETE: Eliminar un ingreso
+  deleteIncome(userId: string, year: string, month: string, incomeId: string): Observable<any> {
+    const url = `${this.FIREBASE_BASE_URL}/${userId}/${year}/${month}/ingresos/${incomeId}.json`;
+    return this.http.delete(url).pipe(
+      catchError(error => {
+        console.error('[DELETE] Error al eliminar ingreso:', error);
+        return of(null);
+      })
+    );
   }
 }

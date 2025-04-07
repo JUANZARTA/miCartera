@@ -28,8 +28,8 @@
               ${{ formatCurrency(account.valor) }}
             </td>
             <td class="py-4 px-6 text-center">
-              <button (click)="openEditModal(i)" class="text-blue-600 mr-2">✏️</button>
-              <button (click)="deleteAccount(i)" class="text-red-600">🗑️</button>
+              <button (click)="openEditModal(account.id)" class="text-blue-600 mr-2">✏️</button>
+              <button (click)="deleteAccount(account.id)" class="text-red-600">🗑️</button>
             </td>
           </tr>
 

@@ -4,6 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { IncomeService } from '../../services/income.service';
 import { CategoriaIngreso, Income } from '../../models/income.model';
 
+export interface IncomeWithId extends Income {
+  id: string;
+}
+
 @Component({
   selector: 'app-income',
   standalone: true,
@@ -18,7 +22,7 @@ export default class IncomeComponent implements OnInit {
   private decimalPipe = inject(DecimalPipe);
 
   // Datos
-  incomes: Income[] = [];
+  incomes: IncomeWithId[] = [];
 
   // Modales
   isModalOpen: boolean = false;
@@ -32,20 +36,24 @@ export default class IncomeComponent implements OnInit {
 
   // Ingreso en edición (modal)
   editedIncome: Income = new Income('', CategoriaIngreso.Fijo, 0);
-  editedIndex: number | null = null;
+  editedId: string | null = null;
+
+  readonly userId = 'UsorIijcpxfEymdA3uZrusvip0g2';
+  readonly year = '2024';
+  readonly month = '01';
 
   ngOnInit() {
     this.loadIncomes();
   }
 
-  // Obtener ingresos desde el servicio
+  // Obtener ingresos desde Firebase
   loadIncomes() {
-    this.incomeService.getIncomes().subscribe({
+    this.incomeService.getIncomes(this.userId, this.year, this.month).subscribe({
       next: (data) => {
-        this.incomes = data;
+        this.incomes = Object.entries(data).map(([id, income]) => ({ id, ...income }));
       },
       error: (err) => {
-        console.error('Error al cargar ingresos:', err);
+        console.error('❌ Error al cargar ingresos:', err);
       },
     });
   }
@@ -68,9 +76,9 @@ export default class IncomeComponent implements OnInit {
       return;
     }
 
-    this.incomeService.addIncome({ ...this.newIncome }).subscribe({
-      next: (updatedList) => {
-        this.incomes = updatedList;
+    this.incomeService.addIncome(this.userId, this.year, this.month, this.newIncome).subscribe({
+      next: () => {
+        this.loadIncomes();
         this.closeModal();
       },
     });
@@ -79,33 +87,35 @@ export default class IncomeComponent implements OnInit {
   // ======================
   // Modal: Editar Ingreso
   // ======================
-  openEditModal(index: number) {
-    const original = this.incomes[index];
+  openEditModal(id: string) {
+    const original = this.incomes.find(i => i.id === id);
+    if (!original) return;
+
     this.editedIncome = new Income(
       original.nombre,
       original.categoria,
       original.valor
     );
-    this.editedIndex = index;
+    this.editedId = id;
     this.isEditModalOpen = true;
   }
 
   closeEditModal() {
     this.isEditModalOpen = false;
     this.editedIncome = new Income('', CategoriaIngreso.Fijo, 0);
-    this.editedIndex = null;
+    this.editedId = null;
   }
 
   saveEditedIncome() {
-    if (this.editedIndex === null) return;
+    if (!this.editedId) return;
 
-    this.incomeService.updateIncome(this.editedIndex, { ...this.editedIncome }).subscribe({
-      next: (updatedList) => {
-        this.incomes = updatedList;
+    this.incomeService.updateIncome(this.userId, this.year, this.month, this.editedId, this.editedIncome).subscribe({
+      next: () => {
+        this.loadIncomes();
         this.closeEditModal();
       },
       error: (err) => {
-        console.error('Error al actualizar ingreso:', err);
+        console.error('❌ Error al actualizar ingreso:', err);
       },
     });
   }
@@ -113,16 +123,16 @@ export default class IncomeComponent implements OnInit {
   // ======================
   // Eliminar
   // ======================
-  deleteIncome(index: number) {
+  deleteIncome(id: string) {
     const confirmDelete = confirm('¿Estás seguro de eliminar este ingreso?');
     if (!confirmDelete) return;
 
-    this.incomeService.deleteIncome(index).subscribe({
-      next: (updatedList) => {
-        this.incomes = updatedList;
+    this.incomeService.deleteIncome(this.userId, this.year, this.month, id).subscribe({
+      next: () => {
+        this.loadIncomes();
       },
       error: (err) => {
-        console.error('Error al eliminar ingreso:', err);
+        console.error('❌ Error al eliminar ingreso:', err);
       },
     });
   }
@@ -138,8 +148,8 @@ export default class IncomeComponent implements OnInit {
     return this.decimalPipe.transform(value, '1.0-0') || '';
   }
 
-  getGroupedIncomes(): { categoria: string; items: Income[] }[] {
-    const map = new Map<string, Income[]>();
+  getGroupedIncomes(): { categoria: string; items: IncomeWithId[] }[] {
+    const map = new Map<string, IncomeWithId[]>();
 
     for (const income of this.incomes) {
       const cat = income.categoria;
@@ -152,7 +162,7 @@ export default class IncomeComponent implements OnInit {
     return Array.from(map.entries()).map(([categoria, items]) => ({ categoria, items }));
   }
 
-  getGroupTotal(items: Income[]) {
+  getGroupTotal(items: IncomeWithId[]) {
     return items.reduce((acc, item) => acc + (Number(item.valor) || 0), 0);
   }
 }

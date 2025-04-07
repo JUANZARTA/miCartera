@@ -4,6 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { WalletService } from '../../services/wallet.service';
 import { WalletAccount } from '../../models/wallet.model';
 
+export interface WalletAccountWithId extends WalletAccount {
+  id: string;
+}
+
 @Component({
   selector: 'app-wallet',
   standalone: true,
@@ -13,35 +17,30 @@ import { WalletAccount } from '../../models/wallet.model';
   providers: [DecimalPipe]
 })
 export default class WalletComponent implements OnInit {
-  // Servicios
   private walletService = inject(WalletService);
   private decimalPipe = inject(DecimalPipe);
 
-  // Datos
-  wallet: WalletAccount[] = [];
+  wallet: WalletAccountWithId[] = [];
 
-  // Modales
   isModalOpen = false;
   isEditModalOpen = false;
 
-  // Cuenta nueva
   newAccount: WalletAccount = new WalletAccount('', 0);
-
-  // Cuenta en edición
   editedAccount: WalletAccount = new WalletAccount('', 0);
-  editedIndex: number | null = null;
+  editedId: string | null = null;
+
+  readonly userId = 'UsorIijcpxfEymdA3uZrusvip0g2';
+  readonly year = '2024';
+  readonly month = '01';
 
   ngOnInit() {
     this.loadWallet();
   }
 
-  // ======================
-  // Cargar datos
-  // ======================
   loadWallet() {
-    this.walletService.getWallet().subscribe({
+    this.walletService.getWallet(this.userId, this.year, this.month).subscribe({
       next: (data) => {
-        this.wallet = data;
+        this.wallet = Object.entries(data).map(([id, item]) => ({ id, ...item }));
       },
       error: (err) => {
         console.error('Error al cargar la cartera:', err);
@@ -49,9 +48,6 @@ export default class WalletComponent implements OnInit {
     });
   }
 
-  // ======================
-  // Modal: Agregar
-  // ======================
   openModal() {
     this.isModalOpen = true;
   }
@@ -67,36 +63,35 @@ export default class WalletComponent implements OnInit {
       return;
     }
 
-    this.walletService.addAccount({ ...this.newAccount }).subscribe({
-      next: (updatedList) => {
-        this.wallet = updatedList;
+    this.walletService.addAccount(this.userId, this.year, this.month, this.newAccount).subscribe({
+      next: () => {
+        this.loadWallet();
         this.closeModal();
       },
     });
   }
 
-  // ======================
-  // Modal: Editar
-  // ======================
-  openEditModal(index: number) {
-    const original = this.wallet[index];
+  openEditModal(id: string) {
+    const original = this.wallet.find(w => w.id === id);
+    if (!original) return;
+
     this.editedAccount = new WalletAccount(original.tipo, original.valor);
-    this.editedIndex = index;
+    this.editedId = id;
     this.isEditModalOpen = true;
   }
 
   closeEditModal() {
     this.isEditModalOpen = false;
     this.editedAccount = new WalletAccount('', 0);
-    this.editedIndex = null;
+    this.editedId = null;
   }
 
   saveEditedAccount() {
-    if (this.editedIndex === null) return;
+    if (!this.editedId) return;
 
-    this.walletService.updateAccount(this.editedIndex, { ...this.editedAccount }).subscribe({
-      next: (updatedList) => {
-        this.wallet = updatedList;
+    this.walletService.updateAccount(this.userId, this.year, this.month, this.editedId, this.editedAccount).subscribe({
+      next: () => {
+        this.loadWallet();
         this.closeEditModal();
       },
       error: (err) => {
@@ -105,16 +100,13 @@ export default class WalletComponent implements OnInit {
     });
   }
 
-  // ======================
-  // Eliminar
-  // ======================
-  deleteAccount(index: number) {
+  deleteAccount(id: string) {
     const confirmDelete = confirm('¿Estás seguro de eliminar esta cuenta?');
     if (!confirmDelete) return;
 
-    this.walletService.deleteAccount(index).subscribe({
-      next: (updatedList) => {
-        this.wallet = updatedList;
+    this.walletService.deleteAccount(this.userId, this.year, this.month, id).subscribe({
+      next: () => {
+        this.loadWallet();
       },
       error: (err) => {
         console.error('Error al eliminar cuenta:', err);
@@ -122,9 +114,6 @@ export default class WalletComponent implements OnInit {
     });
   }
 
-  // ======================
-  // Utilidades
-  // ======================
   getTotalWallet(): number {
     return this.wallet.reduce((sum, e) => sum + Number(e.valor), 0);
   }

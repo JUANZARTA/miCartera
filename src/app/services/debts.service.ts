@@ -1,4 +1,3 @@
-// debt.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
@@ -9,46 +8,52 @@ import { Debt } from '../models/debt.model';
   providedIn: 'root'
 })
 export class DebtService {
-  private readonly MOCK_DATA_URL = '/assets/json/data.json';
-  private debtCache: Debt[] = [];
+  private readonly FIREBASE_BASE_URL = 'https://micartera-acd5b-default-rtdb.firebaseio.com';
 
   constructor(private http: HttpClient) {}
 
-  getDebts(): Observable<Debt[]> {
-    if (this.debtCache.length > 0) {
-      return of(this.debtCache);
-    }
-
-    return this.http.get<{ deudas: Debt[] }>(this.MOCK_DATA_URL).pipe(
-      map(response => {
-        this.debtCache = response.deudas;
-        return this.debtCache;
-      }),
+  // 🔹 GET: Obtener todas las deudas de un mes/año/usuario
+  getDebts(userId: string, year: string, month: string): Observable<{ [key: string]: Debt }> {
+    const url = `${this.FIREBASE_BASE_URL}/${userId}/${year}/${month}/deudas.json`;
+    return this.http.get<{ [key: string]: Debt }>(url).pipe(
+      map(data => data || {}),
       catchError(error => {
-        console.error('[DebtService] Error al cargar deudas:', error);
-        return of([]);
+        console.error('[GET] Error al obtener deudas:', error);
+        return of({});
       })
     );
   }
 
-  addDebt(debt: Debt): Observable<Debt[]> {
-    this.debtCache.push(debt);
-    return of(this.debtCache);
+  // 🔹 POST: Agregar nueva deuda
+  addDebt(userId: string, year: string, month: string, debt: Debt): Observable<any> {
+    const url = `${this.FIREBASE_BASE_URL}/${userId}/${year}/${month}/deudas.json`;
+    return this.http.post(url, debt).pipe(
+      catchError(error => {
+        console.error('[POST] Error al agregar deuda:', error);
+        return of(null);
+      })
+    );
   }
 
-  updateDebt(index: number, updated: Debt): Observable<Debt[]> {
-    if (this.debtCache[index]) {
-      this.debtCache[index] = updated;
-    }
-    return of(this.debtCache);
+  // 🔹 PUT: Actualizar una deuda existente
+  updateDebt(userId: string, year: string, month: string, debtId: string, debt: Debt): Observable<any> {
+    const url = `${this.FIREBASE_BASE_URL}/${userId}/${year}/${month}/deudas/${debtId}.json`;
+    return this.http.put(url, debt).pipe(
+      catchError(error => {
+        console.error('[PUT] Error al actualizar deuda:', error);
+        return of(null);
+      })
+    );
   }
 
-  deleteDebt(index: number): Observable<Debt[]> {
-    this.debtCache.splice(index, 1);
-    return of(this.debtCache);
-  }
-
-  clearCache(): void {
-    this.debtCache = [];
+  // 🔹 DELETE: Eliminar una deuda
+  deleteDebt(userId: string, year: string, month: string, debtId: string): Observable<any> {
+    const url = `${this.FIREBASE_BASE_URL}/${userId}/${year}/${month}/deudas/${debtId}.json`;
+    return this.http.delete(url).pipe(
+      catchError(error => {
+        console.error('[DELETE] Error al eliminar deuda:', error);
+        return of(null);
+      })
+    );
   }
 }
