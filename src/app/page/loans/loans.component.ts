@@ -35,7 +35,7 @@ export default class LoansComponent implements OnInit {
   // Préstamo nuevo (modal)
   newLoan: Loan = new Loan('', '', '', 0, 'Pendiente');
 
-  readonly userId = 'UsorIijcpxfEymdA3uZrusvip0g2';
+  readonly userId = JSON.parse(localStorage.getItem('user') || '{}').localId;
   readonly year = '2024';
   readonly month = '01';
 

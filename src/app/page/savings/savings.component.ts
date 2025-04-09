@@ -35,7 +35,7 @@ export default class SavingsComponent implements OnInit {
   editedSaving: Saving = new Saving('', 0);
   editedId: string | null = null;
 
-  readonly userId = 'UsorIijcpxfEymdA3uZrusvip0g2';
+  readonly userId = JSON.parse(localStorage.getItem('user') || '{}').localId;
   readonly year = '2024';
   readonly month = '01';
 

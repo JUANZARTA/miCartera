@@ -29,7 +29,7 @@ export default class WalletComponent implements OnInit {
   editedAccount: WalletAccount = new WalletAccount('', 0);
   editedId: string | null = null;
 
-  readonly userId = 'UsorIijcpxfEymdA3uZrusvip0g2';
+  readonly userId = JSON.parse(localStorage.getItem('user') || '{}').localId;
   readonly year = '2024';
   readonly month = '01';
 

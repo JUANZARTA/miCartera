@@ -35,7 +35,7 @@ export default class DebtsComponent implements OnInit {
   // Deuda nueva
   newDebt: Debt = new Debt('', '', '', 0, 'Pendiente');
 
-  readonly userId = 'UsorIijcpxfEymdA3uZrusvip0g2';
+  readonly userId = JSON.parse(localStorage.getItem('user') || '{}').localId;
   readonly year = '2024';
   readonly month = '01';
 

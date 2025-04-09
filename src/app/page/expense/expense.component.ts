@@ -22,7 +22,7 @@ export default class ExpenseComponent implements OnInit {
 
   expenses: ExpenseWithId[] = [];
 
-  // Modales 
+  // Modales
   isModalOpen = false;
   isEditModalOpen = false;
 
@@ -32,7 +32,7 @@ export default class ExpenseComponent implements OnInit {
   editedExpense: Expense = new Expense('', CategoriaGasto.Variable, 0, 0);
   editedId: string | null = null;
 
-  readonly userId = 'UsorIijcpxfEymdA3uZrusvip0g2';
+  readonly userId = JSON.parse(localStorage.getItem('user') || '{}').localId;
   readonly year = '2024';
   readonly month = '01';
 
