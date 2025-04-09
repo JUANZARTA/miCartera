@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-register',
@@ -12,12 +12,13 @@ import { HttpClient } from '@angular/common/http';
   styleUrls: ['./register.component.css']
 })
 export default class RegisterComponent implements OnInit {
-  private http = inject(HttpClient);
-  private router = inject(Router);
   private fb = inject(FormBuilder);
+  private router = inject(Router);
+  private authService = inject(AuthService);
 
   registerForm: FormGroup;
-  users: any[] = [];
+  errorMessage = '';
+  successMessage = '';
 
   constructor() {
     this.registerForm = this.fb.group({
@@ -28,64 +29,45 @@ export default class RegisterComponent implements OnInit {
     }, { validator: this.passwordsMatch });
   }
 
-  ngOnInit() {
-    this.loadUsers();
+  ngOnInit(): void {}
+
+  // Verificar campos inválidos
+  isInvalid(field: string): boolean {
+    return this.registerForm.controls[field].invalid && this.registerForm.controls[field].touched;
   }
 
-  // 🔹 Cargar los usuarios actuales desde `data.json`
-  loadUsers() {
-    this.http.get<any>('/assets/data.json').subscribe({
-      next: (data) => {
-        console.log('✅ Usuarios cargados:', data.usuarios);
-        this.users = data.usuarios;
-      },
-      error: (err) => {
-        console.error('❌ Error al cargar usuarios:', err);
-      }
-    });
-  }
-
-  // 🔹 Validar que las contraseñas coincidan
+  // Validar que las contraseñas coincidan
   private passwordsMatch(formGroup: FormGroup) {
     return formGroup.get('password')?.value === formGroup.get('confirmPassword')?.value
       ? null
       : { mismatch: true };
   }
 
-  // 🔹 Verificar si un campo es inválido
-  isInvalid(field: string): boolean {
-    return this.registerForm.controls[field].invalid && this.registerForm.controls[field].touched;
-  }
-
-  // 🔹 Manejar el envío del formulario
+  // Enviar formulario de registro
   onSubmit() {
     if (this.registerForm.valid) {
-      const newUser = {
-        nombre: this.registerForm.value.name,
-        email: this.registerForm.value.email,
-        password: this.registerForm.value.password
-      };
+      const { email, password } = this.registerForm.value;
 
-      // 📌 Verificar si el usuario ya existe
-      const userExists = this.users.some(user => user.email === newUser.email);
-
-      if (userExists) {
-        alert('❌ Este correo ya está registrado.');
-        return;
-      }
-
-      // 📌 Agregar el nuevo usuario a la lista y "guardar" en `data.json`
-      this.users.push(newUser);
-      this.saveUsers();
-
-      alert('✅ Registro exitoso. Ahora puedes iniciar sesión.');
-      this.router.navigate(['/login']); // ✅ Redirigir al login después de registrar
+      this.authService.register(email, password).subscribe({
+        next: () => {
+          this.successMessage = '✅ Registro exitoso. Redirigiendo al login...';
+          setTimeout(() => {
+            this.router.navigate(['/login']);
+          }, 1500);
+        },
+        error: (err) => {
+          this.errorMessage = this.getFirebaseErrorMessage(err);
+        }
+      });
     }
   }
 
-  // 🔹 Simulación de guardado en `data.json`
-  saveUsers() {
-    console.log('📝 Guardando usuarios en data.json...', this.users);
-    // 🔴 Aquí, en una API real, haríamos una petición HTTP tipo POST o PUT para guardar los datos en un backend.
+  private getFirebaseErrorMessage(code: string): string {
+    switch (code) {
+      case 'EMAIL_EXISTS':
+        return '❌ Este correo ya está registrado.';
+      default:
+        return '❌ Ha ocurrido un error inesperado.';
+    }
   }
 }
