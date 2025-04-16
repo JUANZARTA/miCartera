@@ -28,8 +28,8 @@ export default class ExpenseComponent implements OnInit {
 
   categorias: string[] = Object.values(CategoriaGasto);
 
-  newExpense: Expense = new Expense('', CategoriaGasto.Variable, 0, 0);
-  editedExpense: Expense = new Expense('', CategoriaGasto.Variable, 0, 0);
+  newExpense: Expense = new Expense('', CategoriaGasto.Variable, null as any, null as any);
+  editedExpense: Expense = new Expense('', CategoriaGasto.Variable, null as any, null as any);
   editedId: string | null = null;
 
   readonly userId = JSON.parse(localStorage.getItem('user') || '{}').localId;
@@ -175,4 +175,22 @@ export default class ExpenseComponent implements OnInit {
   getTotalEstimations() {
     return this.expenses.reduce((acc, item) => acc + (Number(item.estimacion) || 0), 0);
   }
+
+  // Procesar entrada y convertir a número limpio
+onValueInput(event: Event, field: 'valor' | 'estimacion') {
+  const input = (event.target as HTMLInputElement);
+  const rawValue = input.value.replace(/[.,]/g, '');
+  const numericValue = Number(rawValue) || 0;
+  this.newExpense[field] = numericValue;
+  input.value = this.formatCurrency(numericValue);
+}
+
+onEditValueInput(event: Event, field: 'valor' | 'estimacion') {
+  const input = (event.target as HTMLInputElement);
+  const rawValue = input.value.replace(/[.,]/g, '');
+  const numericValue = Number(rawValue) || 0;
+  this.editedExpense[field] = numericValue;
+  input.value = this.formatCurrency(numericValue);
+}
+
 }

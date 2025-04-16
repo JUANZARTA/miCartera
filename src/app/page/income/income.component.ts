@@ -32,10 +32,10 @@ export default class IncomeComponent implements OnInit {
   categorias: string[] = Object.values(CategoriaIngreso);
 
   // Ingreso nuevo (modal)
-  newIncome: Income = new Income('', CategoriaIngreso.Fijo, 0);
+  newIncome: Income = new Income('', CategoriaIngreso.Fijo, null as any);
 
   // Ingreso en edición (modal)
-  editedIncome: Income = new Income('', CategoriaIngreso.Fijo, 0);
+  editedIncome: Income = new Income('', CategoriaIngreso.Fijo, null as any);
   editedId: string | null = null;
 
   readonly userId = JSON.parse(localStorage.getItem('user') || '{}').localId;
@@ -67,7 +67,7 @@ export default class IncomeComponent implements OnInit {
 
   closeModal() {
     this.isModalOpen = false;
-    this.newIncome = new Income('', CategoriaIngreso.Fijo, 0);
+    this.newIncome = new Income('', CategoriaIngreso.Fijo, null as any);
   }
 
   addIncome() {
@@ -102,7 +102,7 @@ export default class IncomeComponent implements OnInit {
 
   closeEditModal() {
     this.isEditModalOpen = false;
-    this.editedIncome = new Income('', CategoriaIngreso.Fijo, 0);
+    this.editedIncome = new Income('', CategoriaIngreso.Fijo, null as any);
     this.editedId = null;
   }
 
@@ -164,5 +164,24 @@ export default class IncomeComponent implements OnInit {
 
   getGroupTotal(items: IncomeWithId[]) {
     return items.reduce((acc, item) => acc + (Number(item.valor) || 0), 0);
+  }
+
+  // ======================
+  // Formateo visual inputs
+  // ======================
+  onValueInput(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const raw = input.value.replace(/[.,]/g, '');
+    const value = Number(raw) || 0;
+    this.newIncome.valor = value;
+    input.value = this.formatCurrency(value);
+  }
+
+  onEditValueInput(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const raw = input.value.replace(/[.,]/g, '');
+    const value = Number(raw) || 0;
+    this.editedIncome.valor = value;
+    input.value = this.formatCurrency(value);
   }
 }

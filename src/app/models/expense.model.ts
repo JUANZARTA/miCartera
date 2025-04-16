@@ -1,10 +1,15 @@
 export enum CategoriaGasto {
     Fijo = 'Fijo',
-    Variable = 'Variable',
-    Otro = 'Otro',
-    Emergencia = 'Emergencia'
+    Variable = 'Variables',
+    Facturas = 'Facturas',
+    Comida = 'Comida',
+    Transporte = 'Transporte',
+    Salud = 'Salud',
+    Entretenimiento = 'Entretenimiento',
+    Emergencia = 'Emergencia',
+    Otro = 'Otro'
   }
-  
+
   export class Expense {
     constructor(
       public descripcion: string,
@@ -16,4 +21,3 @@ export enum CategoriaGasto {
   export interface ExpenseWithId extends Expense {
     id: string;
   }
-  
