@@ -48,7 +48,9 @@
                   "maximumError": "4kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "baseHref": "/miCartera/"
+
             },
             "development": {
               "optimization": false,
