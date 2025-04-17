@@ -155,8 +155,26 @@ export default class LoansComponent implements OnInit, OnDestroy {
   }
 
   togglePaymentStatus(loan: LoanWithId) {
-    loan.estado = loan.estado === 'Pendiente' ? 'Pagado' : 'Pendiente';
+    const updatedStatus = (loan.estado === 'Pendiente' ? 'Pagado' : 'Pendiente') as 'Pendiente' | 'Pagado';
+
+    const updatedLoan: Loan = {
+      deudor: loan.deudor,
+      fecha_prestamo: loan.fecha_prestamo,
+      fecha_pago: loan.fecha_pago,
+      valor: loan.valor,
+      estado: updatedStatus,
+    };
+
+    this.loanService.updateLoan(this.userId, this.currentYear, this.currentMonth, loan.id, updatedLoan).subscribe({
+      next: () => {
+        this.loadLoans(); // recarga los datos
+      },
+      error: (err) => {
+        console.error('Error al actualizar estado del préstamo:', err);
+      }
+    });
   }
+
 
   // ======================
   // Utilidades
@@ -170,4 +188,19 @@ export default class LoansComponent implements OnInit, OnDestroy {
   formatCurrency(value: number): string {
     return this.decimalPipe.transform(value, '1.0-0') || '';
   }
+
+  onValueInput(event: Event, type: 'new' | 'edit') {
+    const input = event.target as HTMLInputElement;
+    const raw = input.value.replace(/[.,]/g, '');
+    const value = Number(raw) || null;
+
+    if (type === 'new') {
+      this.newLoan.valor = value ?? 0;
+    } else {
+      this.editedLoan.valor = value ?? 0;
+    }
+
+    input.value = this.formatCurrency(value ?? 0);
+  }
+
 }

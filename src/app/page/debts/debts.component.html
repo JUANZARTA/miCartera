@@ -1,7 +1,9 @@
 <div class="mb-6 grid grid-cols-1 xl:grid-cols-2 gap-6">
-  <div class="relative flex flex-col bg-white rounded-xl shadow-lg overflow-hidden xl:col-span-2 border border-gray-200">
+  <div
+    class="relative flex flex-col bg-white rounded-xl shadow-lg overflow-hidden xl:col-span-2 border border-gray-200">
     <!-- Encabezado -->
-    <div class="flex items-center justify-between p-6 bg-gradient-to-r from-blue-700 to-teal-500 text-white rounded-t-xl shadow-md">
+    <div
+      class="flex items-center justify-between p-6 bg-gradient-to-r from-blue-700 to-teal-500 text-white rounded-t-xl shadow-md">
       <div>
         <h6 class="text-xl font-bold tracking-wide">Deudas</h6>
         <p class="text-sm flex items-center gap-2 opacity-90">
@@ -61,7 +63,8 @@
 
     <!-- Botón para agregar deuda -->
     <div class="flex justify-end p-4">
-      <button (click)="openModal()" class="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-teal-500 transition">
+      <button (click)="openModal()"
+        class="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-teal-500 transition">
         Agregar Deuda +
       </button>
     </div>
@@ -72,16 +75,18 @@
         <h2 class="text-xl font-bold mb-4">Agregar Nueva Deuda</h2>
 
         <label class="block mb-2">Nombre Deuda:</label>
-        <input type="text" [(ngModel)]="newDebt.acreedor" class="w-full p-2 border rounded-md mb-3">
+        <input type="text" [(ngModel)]="newDebt.acreedor" placeholder="Ejm: Banco Pichincha"
+          class="w-full p-2 border rounded-md mb-3" />
 
         <label class="block mb-2">Fecha de Deuda:</label>
-        <input type="date" [(ngModel)]="newDebt.fecha_deuda" class="w-full p-2 border rounded-md mb-3">
+        <input type="date" [(ngModel)]="newDebt.fecha_deuda" class="w-full p-2 border rounded-md mb-3" />
 
         <label class="block mb-2">Fecha de Pago:</label>
-        <input type="date" [(ngModel)]="newDebt.fecha_pago" class="w-full p-2 border rounded-md mb-3">
+        <input type="date" [(ngModel)]="newDebt.fecha_pago" class="w-full p-2 border rounded-md mb-3" />
 
         <label class="block mb-2">Valor:</label>
-        <input type="number" [(ngModel)]="newDebt.valor" class="w-full p-2 border rounded-md mb-3">
+        <input type="text" [value]="formatCurrency(newDebt.valor)" (input)="onValueInput($event, 'new')"
+          placeholder="Ejm: 35.000" class="w-full p-2 border rounded-md mb-3" />
 
         <div class="flex justify-end gap-2">
           <button (click)="closeModal()" class="px-4 py-2 border rounded-md">Cancelar</button>
@@ -96,16 +101,18 @@
         <h2 class="text-xl font-bold mb-4">Editar Deuda</h2>
 
         <label class="block mb-2">Nombre Deuda:</label>
-        <input type="text" [(ngModel)]="editedDebt.acreedor" class="w-full p-2 border rounded-md mb-3">
+        <input type="text" [(ngModel)]="editedDebt.acreedor" placeholder="Ejm: Tarjeta Visa"
+          class="w-full p-2 border rounded-md mb-3" />
 
         <label class="block mb-2">Fecha de Deuda:</label>
-        <input type="date" [(ngModel)]="editedDebt.fecha_deuda" class="w-full p-2 border rounded-md mb-3">
+        <input type="date" [(ngModel)]="editedDebt.fecha_deuda" class="w-full p-2 border rounded-md mb-3" />
 
         <label class="block mb-2">Fecha de Pago:</label>
-        <input type="date" [(ngModel)]="editedDebt.fecha_pago" class="w-full p-2 border rounded-md mb-3">
+        <input type="date" [(ngModel)]="editedDebt.fecha_pago" class="w-full p-2 border rounded-md mb-3" />
 
         <label class="block mb-2">Valor:</label>
-        <input type="number" [(ngModel)]="editedDebt.valor" class="w-full p-2 border rounded-md mb-3">
+        <input type="text" [value]="formatCurrency(editedDebt.valor)" (input)="onValueInput($event, 'edit')"
+          placeholder="Ejm: 50.000" class="w-full p-2 border rounded-md mb-3" />
 
         <div class="flex justify-end gap-2">
           <button (click)="closeEditModal()" class="px-4 py-2 border rounded-md">Cancelar</button>
@@ -113,5 +120,5 @@
         </div>
       </div>
     </div>
+
   </div>
-</div>

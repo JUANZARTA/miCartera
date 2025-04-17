@@ -137,4 +137,19 @@ export default class WalletComponent implements OnInit, OnDestroy {
   formatCurrency(value: number): string {
     return this.decimalPipe.transform(value, '1.0-0') || '';
   }
+
+  onValueInput(event: Event, type: 'new' | 'edit') {
+    const input = event.target as HTMLInputElement;
+    const raw = input.value.replace(/[.,]/g, '');
+    const value = Number(raw) || null;
+
+    if (type === 'new') {
+      this.newAccount.valor = value ?? 0;
+    } else {
+      this.editedAccount.valor = value ?? 0;
+    }
+
+    input.value = this.formatCurrency(value ?? 0);
+  }
+
 }

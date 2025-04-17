@@ -1,8 +1,10 @@
 <div class="mb-6 grid grid-cols-1 xl:grid-cols-2 gap-6">
-  <div class="relative flex flex-col bg-white rounded-xl shadow-lg overflow-hidden xl:col-span-2 border border-gray-200">
+  <div
+    class="relative flex flex-col bg-white rounded-xl shadow-lg overflow-hidden xl:col-span-2 border border-gray-200">
 
     <!-- Encabezado -->
-    <div class="flex items-center justify-between p-6 bg-gradient-to-r from-blue-700 to-teal-500 text-white rounded-t-xl shadow-md">
+    <div
+      class="flex items-center justify-between p-6 bg-gradient-to-r from-blue-700 to-teal-500 text-white rounded-t-xl shadow-md">
       <div>
         <h6 class="text-xl font-bold tracking-wide">Mis Ahorros</h6>
         <p class="text-sm flex items-center gap-2 opacity-90">
@@ -47,7 +49,8 @@
 
     <!-- Botón para agregar ahorro -->
     <div class="flex justify-end p-4">
-      <button (click)="openModal()" class="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-teal-500 transition">
+      <button (click)="openModal()"
+        class="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-teal-500 transition">
         Agregar Ahorro +
       </button>
     </div>
@@ -58,10 +61,12 @@
         <h2 class="text-xl font-bold mb-4">Agregar Nuevo Ahorro</h2>
 
         <label class="block mb-2">Ahorro en:</label>
-        <input type="text" [(ngModel)]="newSaving.tipo" class="w-full p-2 border rounded-md mb-3">
+        <input type="text" [(ngModel)]="newSaving.tipo" placeholder="Ejm: Cuenta bancaria"
+          class="w-full p-2 border rounded-md mb-3">
 
         <label class="block mb-2">Valor:</label>
-        <input type="number" [(ngModel)]="newSaving.valor" class="w-full p-2 border rounded-md mb-3">
+        <input type="text" [value]="formatCurrency(newSaving.valor)" (input)="onValueInput($event, 'new')"
+          placeholder="Ejm: 500.000" class="w-full p-2 border rounded-md mb-3">
 
         <div class="flex justify-end gap-2">
           <button (click)="closeModal()" class="px-4 py-2 border rounded-md">Cancelar</button>
@@ -76,10 +81,12 @@
         <h2 class="text-xl font-bold mb-4">Editar Ahorro</h2>
 
         <label class="block mb-2">Ahorro en:</label>
-        <input type="text" [(ngModel)]="editedSaving.tipo" class="w-full p-2 border rounded-md mb-3">
+        <input type="text" [(ngModel)]="editedSaving.tipo" placeholder="Ejm: Inversión CDT"
+          class="w-full p-2 border rounded-md mb-3">
 
         <label class="block mb-2">Valor:</label>
-        <input type="number" [(ngModel)]="editedSaving.valor" class="w-full p-2 border rounded-md mb-3">
+        <input type="text" [value]="formatCurrency(editedSaving.valor)" (input)="onValueInput($event, 'edit')"
+          placeholder="Ejm: 1.000.000" class="w-full p-2 border rounded-md mb-3">
 
         <div class="flex justify-end gap-2">
           <button (click)="closeEditModal()" class="px-4 py-2 border rounded-md">Cancelar</button>
@@ -87,5 +94,6 @@
         </div>
       </div>
     </div>
+
   </div>
 </div>

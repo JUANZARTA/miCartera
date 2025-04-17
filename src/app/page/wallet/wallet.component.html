@@ -1,8 +1,10 @@
 <div class="mb-6 grid grid-cols-1 xl:grid-cols-2 gap-6">
-  <div class="relative flex flex-col bg-white rounded-xl shadow-lg overflow-hidden xl:col-span-2 border border-gray-200">
+  <div
+    class="relative flex flex-col bg-white rounded-xl shadow-lg overflow-hidden xl:col-span-2 border border-gray-200">
 
     <!-- Encabezado -->
-    <div class="flex items-center justify-between p-6 bg-gradient-to-r from-blue-700 to-teal-500 text-white rounded-t-xl shadow-md">
+    <div
+      class="flex items-center justify-between p-6 bg-gradient-to-r from-blue-700 to-teal-500 text-white rounded-t-xl shadow-md">
       <div>
         <h6 class="text-xl font-bold tracking-wide">Mi Cartera</h6>
         <p class="text-sm flex items-center gap-2 opacity-90">
@@ -59,10 +61,12 @@
         <h2 class="text-xl font-bold mb-4">Agregar Nueva Cuenta</h2>
 
         <label class="block mb-2">Dinero en:</label>
-        <input type="text" [(ngModel)]="newAccount.tipo" class="w-full p-2 border rounded-md mb-3">
+        <input type="text" [(ngModel)]="newAccount.tipo" placeholder="Ejm: Cuenta de ahorros"
+          class="w-full p-2 border rounded-md mb-3" />
 
         <label class="block mb-2">Valor:</label>
-        <input type="number" [(ngModel)]="newAccount.valor" class="w-full p-2 border rounded-md mb-3">
+        <input type="text" [value]="formatCurrency(newAccount.valor)" (input)="onValueInput($event, 'new')"
+          placeholder="Ejm: 1.000.000" class="w-full p-2 border rounded-md mb-3" />
 
         <div class="flex justify-end gap-2">
           <button (click)="closeModal()" class="px-4 py-2 border rounded-md">Cancelar</button>
@@ -77,10 +81,12 @@
         <h2 class="text-xl font-bold mb-4">Editar Cuenta</h2>
 
         <label class="block mb-2">Dinero en:</label>
-        <input type="text" [(ngModel)]="editedAccount.tipo" class="w-full p-2 border rounded-md mb-3">
+        <input type="text" [(ngModel)]="editedAccount.tipo" placeholder="Ejm: Efectivo"
+          class="w-full p-2 border rounded-md mb-3" />
 
         <label class="block mb-2">Valor:</label>
-        <input type="number" [(ngModel)]="editedAccount.valor" class="w-full p-2 border rounded-md mb-3">
+        <input type="text" [value]="formatCurrency(editedAccount.valor)" (input)="onValueInput($event, 'edit')"
+          placeholder="Ejm: 750.000" class="w-full p-2 border rounded-md mb-3" />
 
         <div class="flex justify-end gap-2">
           <button (click)="closeEditModal()" class="px-4 py-2 border rounded-md">Cancelar</button>
@@ -88,6 +94,7 @@
         </div>
       </div>
     </div>
+
 
   </div>
 </div>

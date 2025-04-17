@@ -158,8 +158,26 @@ export default class DebtsComponent implements OnInit, OnDestroy {
   // Estado
   // ======================
   togglePaymentStatus(debt: DebtWithId) {
-    debt.estado = debt.estado === 'Pendiente' ? 'Pagado' : 'Pendiente';
+    const updatedStatus = (debt.estado === 'Pendiente' ? 'Pagado' : 'Pendiente') as 'Pendiente' | 'Pagado';
+
+    const updatedDebt: Debt = {
+      acreedor: debt.acreedor,
+      fecha_deuda: debt.fecha_deuda,
+      fecha_pago: debt.fecha_pago,
+      valor: debt.valor,
+      estado: updatedStatus,
+    };
+
+    this.debtService.updateDebt(this.userId, this.currentYear, this.currentMonth, debt.id, updatedDebt).subscribe({
+      next: () => {
+        this.loadDebts();
+      },
+      error: (err) => {
+        console.error('Error al cambiar estado de la deuda:', err);
+      }
+    });
   }
+
 
   // ======================
   // Utilidades
@@ -173,4 +191,20 @@ export default class DebtsComponent implements OnInit, OnDestroy {
   formatCurrency(value: number): string {
     return this.decimalPipe.transform(value, '1.0-0') || '';
   }
+
+  onValueInput(event: Event, type: 'new' | 'edit') {
+    const input = event.target as HTMLInputElement;
+    const raw = input.value.replace(/[.,]/g, '');
+    const value = Number(raw) || null;
+
+    if (type === 'new') {
+      this.newDebt.valor = value ?? 0;
+    } else {
+      this.editedDebt.valor = value ?? 0;
+    }
+
+    input.value = this.formatCurrency(value ?? 0);
+  }
+
+
 }
