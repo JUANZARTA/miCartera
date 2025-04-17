@@ -1,8 +1,10 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SavingsService } from '../../services/savings.service';
 import { Saving } from '../../models/savings.model';
+import { DateService } from '../../services/date.service'; // ✅ Nuevo
+import { Subscription } from 'rxjs'; // ✅ Nuevo
 
 export interface SavingWithId extends Saving {
   id: string;
@@ -16,10 +18,11 @@ export interface SavingWithId extends Saving {
   styleUrls: ['./savings.component.css'],
   providers: [DecimalPipe]
 })
-export default class SavingsComponent implements OnInit {
+export default class SavingsComponent implements OnInit, OnDestroy {
   // Servicios
   private savingsService = inject(SavingsService);
   private decimalPipe = inject(DecimalPipe);
+  private dateService = inject(DateService); // ✅ Nuevo
 
   // Datos
   savings: SavingWithId[] = [];
@@ -36,16 +39,29 @@ export default class SavingsComponent implements OnInit {
   editedId: string | null = null;
 
   readonly userId = JSON.parse(localStorage.getItem('user') || '{}').localId;
-  readonly year = '2024';
-  readonly month = '01';
+
+  currentYear: string = '';
+  currentMonth: string = '';
+  private dateSubscription: Subscription | undefined; // ✅ Nuevo
 
   ngOnInit() {
-    this.loadSavings();
+    // ✅ Escuchar cambios en la fecha
+    this.dateSubscription = this.dateService.selectedDate$.subscribe(date => {
+      if (date.year && date.month) {
+        this.currentYear = date.year;
+        this.currentMonth = date.month;
+        this.loadSavings();
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.dateSubscription?.unsubscribe();
   }
 
   // Obtener ahorros
   loadSavings() {
-    this.savingsService.getSavings(this.userId, this.year, this.month).subscribe({
+    this.savingsService.getSavings(this.userId, this.currentYear, this.currentMonth).subscribe({
       next: (data) => {
         this.savings = Object.entries(data).map(([id, s]) => ({ id, ...s }));
       },
@@ -73,7 +89,7 @@ export default class SavingsComponent implements OnInit {
       return;
     }
 
-    this.savingsService.addSaving(this.userId, this.year, this.month, this.newSaving).subscribe({
+    this.savingsService.addSaving(this.userId, this.currentYear, this.currentMonth, this.newSaving).subscribe({
       next: () => {
         this.loadSavings();
         this.closeModal();
@@ -102,7 +118,7 @@ export default class SavingsComponent implements OnInit {
   saveEditedSaving() {
     if (!this.editedId) return;
 
-    this.savingsService.updateSaving(this.userId, this.year, this.month, this.editedId, this.editedSaving).subscribe({
+    this.savingsService.updateSaving(this.userId, this.currentYear, this.currentMonth, this.editedId, this.editedSaving).subscribe({
       next: () => {
         this.loadSavings();
         this.closeEditModal();
@@ -120,7 +136,7 @@ export default class SavingsComponent implements OnInit {
     const confirmDelete = confirm('¿Estás seguro de eliminar este ahorro?');
     if (!confirmDelete) return;
 
-    this.savingsService.deleteSaving(this.userId, this.year, this.month, id).subscribe({
+    this.savingsService.deleteSaving(this.userId, this.currentYear, this.currentMonth, id).subscribe({
       next: () => {
         this.loadSavings();
       },

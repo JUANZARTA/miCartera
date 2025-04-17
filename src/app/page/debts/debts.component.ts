@@ -1,8 +1,10 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DebtService } from '../../services/debts.service';
 import { Debt } from '../../models/debt.model';
+import { DateService } from '../../services/date.service'; // ✅ Nuevo
+import { Subscription } from 'rxjs'; // ✅ Nuevo
 
 export interface DebtWithId extends Debt {
   id: string;
@@ -16,10 +18,11 @@ export interface DebtWithId extends Debt {
   styleUrls: ['./debts.component.css'],
   providers: [DecimalPipe]
 })
-export default class DebtsComponent implements OnInit {
+export default class DebtsComponent implements OnInit, OnDestroy {
   // Servicios
   private debtService = inject(DebtService);
   private decimalPipe = inject(DecimalPipe);
+  private dateService = inject(DateService); // ✅ Nuevo
 
   // Datos
   debts: DebtWithId[] = [];
@@ -36,18 +39,31 @@ export default class DebtsComponent implements OnInit {
   newDebt: Debt = new Debt('', '', '', 0, 'Pendiente');
 
   readonly userId = JSON.parse(localStorage.getItem('user') || '{}').localId;
-  readonly year = '2024';
-  readonly month = '01';
+
+  currentYear: string = '';
+  currentMonth: string = '';
+  private dateSubscription: Subscription | undefined; // ✅ Nuevo
 
   ngOnInit() {
-    this.loadDebts();
+    // ✅ Escuchar cambios en el año y mes seleccionados
+    this.dateSubscription = this.dateService.selectedDate$.subscribe(date => {
+      if (date.year && date.month) {
+        this.currentYear = date.year;
+        this.currentMonth = date.month;
+        this.loadDebts();
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.dateSubscription?.unsubscribe();
   }
 
   // ======================
   // Obtener deudas
   // ======================
   loadDebts() {
-    this.debtService.getDebts(this.userId, this.year, this.month).subscribe({
+    this.debtService.getDebts(this.userId, this.currentYear, this.currentMonth).subscribe({
       next: (data) => {
         this.debts = Object.entries(data).map(([id, d]) => ({ id, ...d }));
       },
@@ -75,7 +91,7 @@ export default class DebtsComponent implements OnInit {
       return;
     }
 
-    this.debtService.addDebt(this.userId, this.year, this.month, { ...this.newDebt }).subscribe({
+    this.debtService.addDebt(this.userId, this.currentYear, this.currentMonth, { ...this.newDebt }).subscribe({
       next: () => {
         this.loadDebts();
         this.closeModal();
@@ -110,7 +126,7 @@ export default class DebtsComponent implements OnInit {
   saveEditedDebt() {
     if (!this.editedId) return;
 
-    this.debtService.updateDebt(this.userId, this.year, this.month, this.editedId, this.editedDebt).subscribe({
+    this.debtService.updateDebt(this.userId, this.currentYear, this.currentMonth, this.editedId, this.editedDebt).subscribe({
       next: () => {
         this.loadDebts();
         this.closeEditModal();
@@ -128,7 +144,7 @@ export default class DebtsComponent implements OnInit {
     const confirmDelete = confirm('¿Estás seguro de eliminar esta deuda?');
     if (!confirmDelete) return;
 
-    this.debtService.deleteDebt(this.userId, this.year, this.month, id).subscribe({
+    this.debtService.deleteDebt(this.userId, this.currentYear, this.currentMonth, id).subscribe({
       next: () => {
         this.loadDebts();
       },

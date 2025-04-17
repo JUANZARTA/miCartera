@@ -1,8 +1,10 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LoanService } from '../../services/loans.service';
 import { Loan } from '../../models/loans.model';
+import { DateService } from '../../services/date.service'; // ✅ Nuevo
+import { Subscription } from 'rxjs'; // ✅ Nuevo
 
 export interface LoanWithId extends Loan {
   id: string;
@@ -16,10 +18,11 @@ export interface LoanWithId extends Loan {
   styleUrls: ['./loans.component.css'],
   providers: [DecimalPipe],
 })
-export default class LoansComponent implements OnInit {
+export default class LoansComponent implements OnInit, OnDestroy {
   // Servicios
   private loanService = inject(LoanService);
   private decimalPipe = inject(DecimalPipe);
+  private dateService = inject(DateService); // ✅ Nuevo
 
   // Datos
   loans: LoanWithId[] = [];
@@ -36,18 +39,31 @@ export default class LoansComponent implements OnInit {
   newLoan: Loan = new Loan('', '', '', 0, 'Pendiente');
 
   readonly userId = JSON.parse(localStorage.getItem('user') || '{}').localId;
-  readonly year = '2024';
-  readonly month = '01';
+
+  currentYear: string = '';
+  currentMonth: string = '';
+  private dateSubscription: Subscription | undefined; // ✅ Nuevo
 
   ngOnInit() {
-    this.loadLoans();
+    // ✅ Suscripción reactiva a año/mes
+    this.dateSubscription = this.dateService.selectedDate$.subscribe(date => {
+      if (date.year && date.month) {
+        this.currentYear = date.year;
+        this.currentMonth = date.month;
+        this.loadLoans();
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.dateSubscription?.unsubscribe();
   }
 
   // ======================
   // Obtener préstamos
   // ======================
   loadLoans() {
-    this.loanService.getLoans(this.userId, this.year, this.month).subscribe({
+    this.loanService.getLoans(this.userId, this.currentYear, this.currentMonth).subscribe({
       next: (data) => {
         this.loans = Object.entries(data).map(([id, loan]) => ({ id, ...loan }));
       },
@@ -75,7 +91,7 @@ export default class LoansComponent implements OnInit {
       return;
     }
 
-    this.loanService.addLoan(this.userId, this.year, this.month, this.newLoan).subscribe({
+    this.loanService.addLoan(this.userId, this.currentYear, this.currentMonth, this.newLoan).subscribe({
       next: () => {
         this.loadLoans();
         this.closeModal();
@@ -110,7 +126,7 @@ export default class LoansComponent implements OnInit {
   saveEditedLoan() {
     if (!this.editedId) return;
 
-    this.loanService.updateLoan(this.userId, this.year, this.month, this.editedId, this.editedLoan).subscribe({
+    this.loanService.updateLoan(this.userId, this.currentYear, this.currentMonth, this.editedId, this.editedLoan).subscribe({
       next: () => {
         this.loadLoans();
         this.closeEditModal();
@@ -128,7 +144,7 @@ export default class LoansComponent implements OnInit {
     const confirmDelete = confirm('¿Estás seguro de eliminar este préstamo?');
     if (!confirmDelete) return;
 
-    this.loanService.deleteLoan(this.userId, this.year, this.month, id).subscribe({
+    this.loanService.deleteLoan(this.userId, this.currentYear, this.currentMonth, id).subscribe({
       next: () => {
         this.loadLoans();
       },

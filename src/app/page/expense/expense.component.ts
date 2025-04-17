@@ -1,8 +1,10 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ExpenseService } from '../../services/expense.service';
 import { CategoriaGasto, Expense } from '../../models/expense.model';
+import { DateService } from '../../services/date.service'; // ✅ Nuevo
+import { Subscription } from 'rxjs'; // ✅ Nuevo
 
 export interface ExpenseWithId extends Expense {
   id: string;
@@ -16,9 +18,10 @@ export interface ExpenseWithId extends Expense {
   styleUrls: ['./expense.component.css'],
   providers: [DecimalPipe],
 })
-export default class ExpenseComponent implements OnInit {
+export default class ExpenseComponent implements OnInit, OnDestroy {
   private expenseService = inject(ExpenseService);
   private decimalPipe = inject(DecimalPipe);
+  private dateService = inject(DateService); // ✅ Nuevo
 
   expenses: ExpenseWithId[] = [];
 
@@ -33,17 +36,31 @@ export default class ExpenseComponent implements OnInit {
   editedId: string | null = null;
 
   readonly userId = JSON.parse(localStorage.getItem('user') || '{}').localId;
-  readonly year = '2024';
-  readonly month = '01';
+
+  currentYear: string = '';
+  currentMonth: string = '';
+
+  private dateSubscription: Subscription | undefined; // ✅ Nuevo
 
   // Variables para el gráfico
   ngOnInit() {
-    this.loadExpenses();
+    // ✅ Suscripción reactiva al cambio de año/mes
+    this.dateSubscription = this.dateService.selectedDate$.subscribe(date => {
+      if (date.year && date.month) {
+        this.currentYear = date.year;
+        this.currentMonth = date.month;
+        this.loadExpenses();
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.dateSubscription?.unsubscribe();
   }
 
   // Método para cargar los gastos
   loadExpenses() {
-    this.expenseService.getExpenses(this.userId, this.year, this.month).subscribe({
+    this.expenseService.getExpenses(this.userId, this.currentYear, this.currentMonth).subscribe({
       next: (data) => {
         this.expenses = Object.entries(data).map(([id, exp]) => ({ id, ...exp }));
       },
@@ -71,7 +88,7 @@ export default class ExpenseComponent implements OnInit {
       return;
     }
 
-    this.expenseService.addExpense(this.userId, this.year, this.month, this.newExpense).subscribe({
+    this.expenseService.addExpense(this.userId, this.currentYear, this.currentMonth, this.newExpense).subscribe({
       next: () => {
         this.loadExpenses(); // Recargar
         this.closeModal();
@@ -106,7 +123,7 @@ export default class ExpenseComponent implements OnInit {
     if (!this.editedId) return;
 
     this.expenseService
-      .updateExpense(this.userId, this.year, this.month, this.editedId, this.editedExpense)
+      .updateExpense(this.userId, this.currentYear, this.currentMonth, this.editedId, this.editedExpense)
       .subscribe({
         next: () => {
           this.loadExpenses();
@@ -119,7 +136,7 @@ export default class ExpenseComponent implements OnInit {
   deleteExpense(id: string) {
     if (!confirm('¿Estás seguro de eliminar este gasto?')) return;
 
-    this.expenseService.deleteExpense(this.userId, this.year, this.month, id).subscribe({
+    this.expenseService.deleteExpense(this.userId, this.currentYear, this.currentMonth, id).subscribe({
       next: () => {
         this.loadExpenses();
       },
@@ -177,20 +194,19 @@ export default class ExpenseComponent implements OnInit {
   }
 
   // Procesar entrada y convertir a número limpio
-onValueInput(event: Event, field: 'valor' | 'estimacion') {
-  const input = (event.target as HTMLInputElement);
-  const rawValue = input.value.replace(/[.,]/g, '');
-  const numericValue = Number(rawValue) || 0;
-  this.newExpense[field] = numericValue;
-  input.value = this.formatCurrency(numericValue);
-}
+  onValueInput(event: Event, field: 'valor' | 'estimacion') {
+    const input = (event.target as HTMLInputElement);
+    const rawValue = input.value.replace(/[.,]/g, '');
+    const numericValue = Number(rawValue) || 0;
+    this.newExpense[field] = numericValue;
+    input.value = this.formatCurrency(numericValue);
+  }
 
-onEditValueInput(event: Event, field: 'valor' | 'estimacion') {
-  const input = (event.target as HTMLInputElement);
-  const rawValue = input.value.replace(/[.,]/g, '');
-  const numericValue = Number(rawValue) || 0;
-  this.editedExpense[field] = numericValue;
-  input.value = this.formatCurrency(numericValue);
-}
-
+  onEditValueInput(event: Event, field: 'valor' | 'estimacion') {
+    const input = (event.target as HTMLInputElement);
+    const rawValue = input.value.replace(/[.,]/g, '');
+    const numericValue = Number(rawValue) || 0;
+    this.editedExpense[field] = numericValue;
+    input.value = this.formatCurrency(numericValue);
+  }
 }

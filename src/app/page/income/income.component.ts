@@ -1,8 +1,10 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IncomeService } from '../../services/income.service';
 import { CategoriaIngreso, Income } from '../../models/income.model';
+import { DateService } from '../../services/date.service'; // ✅ Nuevo
+import { Subscription } from 'rxjs'; // ✅ Nuevo
 
 export interface IncomeWithId extends Income {
   id: string;
@@ -16,10 +18,11 @@ export interface IncomeWithId extends Income {
   styleUrls: ['./income.component.css'],
   providers: [DecimalPipe]
 })
-export default class IncomeComponent implements OnInit {
+export default class IncomeComponent implements OnInit, OnDestroy {
   // Servicios
   private incomeService = inject(IncomeService);
   private decimalPipe = inject(DecimalPipe);
+  private dateService = inject(DateService); // ✅ Nuevo
 
   // Datos
   incomes: IncomeWithId[] = [];
@@ -39,16 +42,29 @@ export default class IncomeComponent implements OnInit {
   editedId: string | null = null;
 
   readonly userId = JSON.parse(localStorage.getItem('user') || '{}').localId;
-  readonly year = '2024';
-  readonly month = '01';
+
+  currentYear: string = '';
+  currentMonth: string = '';
+  private dateSubscription: Subscription | undefined; // ✅ Nuevo
 
   ngOnInit() {
-    this.loadIncomes();
+    // ✅ Suscripción reactiva a cambios de año/mes
+    this.dateSubscription = this.dateService.selectedDate$.subscribe(date => {
+      if (date.year && date.month) {
+        this.currentYear = date.year;
+        this.currentMonth = date.month;
+        this.loadIncomes();
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.dateSubscription?.unsubscribe();
   }
 
   // Obtener ingresos desde Firebase
   loadIncomes() {
-    this.incomeService.getIncomes(this.userId, this.year, this.month).subscribe({
+    this.incomeService.getIncomes(this.userId, this.currentYear, this.currentMonth).subscribe({
       next: (data) => {
         this.incomes = Object.entries(data).map(([id, income]) => ({ id, ...income }));
       },
@@ -76,7 +92,7 @@ export default class IncomeComponent implements OnInit {
       return;
     }
 
-    this.incomeService.addIncome(this.userId, this.year, this.month, this.newIncome).subscribe({
+    this.incomeService.addIncome(this.userId, this.currentYear, this.currentMonth, this.newIncome).subscribe({
       next: () => {
         this.loadIncomes();
         this.closeModal();
@@ -109,7 +125,7 @@ export default class IncomeComponent implements OnInit {
   saveEditedIncome() {
     if (!this.editedId) return;
 
-    this.incomeService.updateIncome(this.userId, this.year, this.month, this.editedId, this.editedIncome).subscribe({
+    this.incomeService.updateIncome(this.userId, this.currentYear, this.currentMonth, this.editedId, this.editedIncome).subscribe({
       next: () => {
         this.loadIncomes();
         this.closeEditModal();
@@ -127,7 +143,7 @@ export default class IncomeComponent implements OnInit {
     const confirmDelete = confirm('¿Estás seguro de eliminar este ingreso?');
     if (!confirmDelete) return;
 
-    this.incomeService.deleteIncome(this.userId, this.year, this.month, id).subscribe({
+    this.incomeService.deleteIncome(this.userId, this.currentYear, this.currentMonth, id).subscribe({
       next: () => {
         this.loadIncomes();
       },

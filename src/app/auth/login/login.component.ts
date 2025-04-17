@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
+import { DateService } from '../../services/date.service'; // Asegúrate de importar esto
 
 @Component({
   selector: 'app-login',
@@ -15,6 +16,8 @@ export default class LoginComponent implements OnInit {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private authService = inject(AuthService);
+
+  private dateService = inject(DateService); // agrega esto a tu clase
 
   loginForm: FormGroup;
   showModal = false;
@@ -60,11 +63,16 @@ export default class LoginComponent implements OnInit {
 
   showWelcomeModal() {
     this.showSuccessModal = true;
+
+    // 🔥 Establecer fecha actual al iniciar sesión
+    this.dateService.resetToCurrentDate();
+
     setTimeout(() => {
       this.showSuccessModal = false;
       this.router.navigate(['app/home']);
     }, 1000);
   }
+
 
   private getFirebaseErrorMessage(code: string): string {
     switch (code) {

@@ -32,11 +32,17 @@ export class AuthService {
 
   logout() {
     localStorage.removeItem('user');
+    localStorage.removeItem('selectedYear');
+    localStorage.removeItem('selectedMonth');
   }
 
   isLoggedIn(): boolean {
-    return !!localStorage.getItem('user');
+    if (typeof window !== 'undefined') {
+      return !!localStorage.getItem('user');
+    }
+    return false;
   }
+
 
   getUser(): any {
     return JSON.parse(localStorage.getItem('user') || '{}');
@@ -59,5 +65,22 @@ export class AuthService {
       })
     );
   }
+
+  saveUserProfile(userId: string, name: string): Observable<any> {
+    const url = `https://app-finanzas-58d02-default-rtdb.firebaseio.com/users/${userId}.json`;
+
+    return this.http.put(url, { name }).pipe(
+      tap(() => {
+        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+        storedUser.name = name;
+        localStorage.setItem('user', JSON.stringify(storedUser));
+      }),
+      catchError((err) => {
+        return throwError(() => 'Error al guardar perfil');
+      })
+    );
+  }
+
+
 
 }

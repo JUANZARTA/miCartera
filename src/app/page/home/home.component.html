@@ -1,137 +1,143 @@
 <div class="p-6 space-y-6">
-  <!-- Botón para abrir el modal de meses -->
-  <div class="flex justify-end">
-    <button (click)="openMonthModal()" class="bg-orange-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-orange-500 transition">
-      <i class="fas fa-calendar-alt"></i> Seleccionar Mes
-    </button>
+
+  <!-- 🗓 Encabezado con mes y año seleccionados -->
+  <h2 class="text-xl font-bold text-gray-700 text-center">
+    Resumen financiero de {{ nombreMes(currentMonth) }} / {{ currentYear }}
+  </h2>
+
+  <!-- ✅ Indicador de salud financiera -->
+  <div class="flex justify-center mb-4">
+    <span [ngClass]="{
+        'bg-green-600': saludFinanciera === 'positiva',
+        'bg-yellow-500': saludFinanciera === 'advertencia',
+        'bg-red-600': saludFinanciera === 'critica'
+      }" class="text-white text-sm font-semibold px-4 py-2 rounded-full shadow-md">
+      {{ mensajeSaludFinanciera }}
+    </span>
   </div>
 
-  <!-- Modal de selección de mes -->
-  <div *ngIf="showMonthModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-    <div class="bg-white p-6 rounded-lg shadow-lg w-96">
-      <h2 class="text-lg font-semibold mb-4 text-center">Selecciona un Mes</h2>
-
-      <div class="grid grid-cols-3 gap-2">
-        <button
-          *ngFor="let month of months; let i = index"
-          (click)="selectMonth(i)"
-          [class.bg-blue-500]="i === selectedMonth"
-          class="p-3 rounded-lg text-center bg-gray-200 hover:bg-gray-300 transition">
-          {{ month }}
-        </button>
-      </div>
-
-      <div class="mt-4 flex justify-end">
-        <button (click)="closeMonthModal()" class="bg-red-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-600 transition">
-          Cerrar
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Botones de Navegación -->
+  <!-- 🔹 Botones de Navegación -->
   <div class="grid grid-cols-3 md:grid-cols-6 gap-4">
-    <a routerLink="/app/expense" class="flex flex-col items-center bg-sky-700 text-white p-3 rounded-lg shadow-md hover:bg-gray-700 transition">
-      <i class="fas fa-chart-pie text-3xl"></i> <!-- Aumentar tamaño del ícono -->
-      <span class="text-base mt-1">Gastos</span> <!-- Aumentar tamaño del texto -->
+    <a routerLink="/app/expense"
+      class="flex flex-col items-center bg-blue-900 text-white p-3 rounded-lg shadow-md hover:bg-blue-700 transition">
+      <i class="fas fa-chart-pie text-3xl"></i>
+      <span class="text-base mt-1">Gastos</span>
     </a>
-    <a routerLink="/app/income" class="flex flex-col items-center bg-cyan-800 text-white p-3 rounded-lg shadow-md hover:bg-gray-700 transition">
+    <a routerLink="/app/income"
+      class="flex flex-col items-center bg-blue-900 text-white p-3 rounded-lg shadow-md hover:bg-blue-700 transition">
       <i class="fas fa-coins text-3xl"></i>
       <span class="text-base mt-1">Ingresos</span>
     </a>
-    <a routerLink="/app/wallet" class="flex flex-col items-center bg-blue-800 text-white p-3 rounded-lg shadow-md hover:bg-gray-700 transition">
+    <a routerLink="/app/wallet"
+      class="flex flex-col items-center bg-blue-900 text-white p-3 rounded-lg shadow-md hover:bg-blue-700 transition">
       <i class="fas fa-wallet text-3xl"></i>
       <span class="text-base mt-1">Cartera</span>
     </a>
-    <a routerLink="/app/saving" class="flex flex-col items-center bg-cyan-600 text-white p-3 rounded-lg shadow-md hover:bg-gray-700 transition">
+    <a routerLink="/app/saving"
+      class="flex flex-col items-center bg-blue-900 text-white p-3 rounded-lg shadow-md hover:bg-blue-700 transition">
       <i class="fas fa-piggy-bank text-3xl"></i>
       <span class="text-base mt-1">Ahorros</span>
     </a>
-    <a routerLink="/app/loan" class="flex flex-col items-center bg-sky-500 text-white p-3 rounded-lg shadow-md hover:bg-gray-700 transition">
+    <a routerLink="/app/loan"
+      class="flex flex-col items-center bg-blue-900 text-white p-3 rounded-lg shadow-md hover:bg-blue-700 transition">
       <i class="fas fa-hand-holding-usd text-3xl"></i>
       <span class="text-base mt-1">Préstamos</span>
     </a>
-    <a routerLink="/app/debt" class="flex flex-col items-center bg-blue-600 text-white p-3 rounded-lg shadow-md hover:bg-gray-700 transition">
+    <a routerLink="/app/debt"
+      class="flex flex-col items-center bg-blue-900 text-white p-3 rounded-lg shadow-md hover:bg-blue-700 transition">
       <i class="fas fa-file-invoice-dollar text-3xl"></i>
       <span class="text-base mt-1">Deudas</span>
     </a>
   </div>
 
-  <!-- 🔹 Tablas: Resumen de Cartera, Deudas y Préstamos -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-  <!-- Tabla Cartera -->
-  <div class="bg-white rounded-lg shadow-lg p-4">
-    <h3 class="text-lg font-semibold text-gray-700 bg-gradient-to-r from-green-600 to-teal-500 text-white px-4 py-2 rounded-t-lg">Cartera</h3>
-    <table class="w-full border-collapse">
-      <thead>
-        <tr class="bg-gray-100">
-          <th class="p-2 text-left">Dinero en</th>
-          <th class="p-2 text-right">Valor</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let item of wallet" class="border-b">
-          <td class="p-2">{{ item.tipo }}</td>
-          <td class="p-2 text-right">{{ item.valor | currency }}</td>
-        </tr>
-      </tbody>
-    </table>
+
+  <!-- 🔹 Tablas: Cartera, Deudas, Préstamos -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Cartera -->
+    <div class="bg-white rounded-lg shadow-lg p-4">
+      <h3
+        class="text-lg font-semibold text-gray-700 bg-gradient-to-r from-green-600 to-teal-500 text-white px-4 py-2 rounded-t-lg">
+        Cartera</h3>
+      <table class="w-full border-collapse">
+        <thead>
+          <tr class="bg-gray-100">
+            <th class="p-2 text-left">Dinero en</th>
+            <th class="p-2 text-right">Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of wallet" class="border-b">
+            <td class="p-2">{{ item.tipo }}</td>
+            <td class="p-2 text-right">{{ item.valor | currency }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Deudas -->
+    <div class="bg-white rounded-lg shadow-lg p-4">
+      <h3
+        class="text-lg font-semibold text-gray-700 bg-gradient-to-r from-red-600 to-orange-600 text-white px-4 py-2 rounded-t-lg">
+        Deudas</h3>
+      <table class="w-full border-collapse">
+        <thead>
+          <tr class="bg-gray-100">
+            <th class="p-2 text-left">Nombre Deuda</th>
+            <th class="p-2 text-center">Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let debt of debts" class="border-b">
+            <td class="p-2">{{ debt.acreedor }}</td>
+            <td class="p-2 text-center">{{ debt.estado }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Préstamos -->
+    <div class="bg-white rounded-lg shadow-lg p-4">
+      <h3
+        class="text-lg font-semibold text-gray-700 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-t-lg">
+        Préstamos</h3>
+      <table class="w-full border-collapse">
+        <thead>
+          <tr class="bg-gray-100">
+            <th class="p-2 text-left">Nombre Deudor</th>
+            <th class="p-2 text-center">Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let loan of loans" class="border-b">
+            <td class="p-2">{{ loan.deudor }}</td>
+            <td class="p-2 text-center">{{ loan.estado }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
-  <!-- Tabla Deudas -->
-  <div class="bg-white rounded-lg shadow-lg p-4">
-    <h3 class="text-lg font-semibold text-gray-700 bg-gradient-to-r from-red-600 to-orange-600 text-white px-4 py-2 rounded-t-lg">Deudas</h3>
-    <table class="w-full border-collapse">
-      <thead>
-        <tr class="bg-gray-100">
-          <th class="p-2 text-left">Nombre Deuda</th>
-          <th class="p-2 text-center">Estado</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let debt of debts" class="border-b">
-          <td class="p-2">{{ debt.acreedor }}</td>
-          <td class="p-2 text-center">{{ debt.estado }}</td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- 🔹 Totales -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+    <div class="bg-gradient-to-r from-green-600 to-teal-500 text-white p-4 rounded-lg shadow-md">
+      <h3 class="text-lg font-semibold">Total en Cartera</h3>
+      <p class="text-2xl font-bold">{{ totalWallet | currency }}</p>
+    </div>
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-lg shadow-md">
+      <h3 class="text-lg font-semibold">Total Préstamos Pendientes</h3>
+      <p class="text-2xl font-bold">{{ totalPendingLoans | currency }}</p>
+    </div>
+    <div class="bg-gradient-to-r from-red-600 to-orange-600 text-white p-4 rounded-lg shadow-md">
+      <h3 class="text-lg font-semibold">Total Deudas Pendientes</h3>
+      <p class="text-2xl font-bold">{{ totalPendingDebts | currency }}</p>
+    </div>
   </div>
 
-  <!-- Tabla Préstamos -->
-  <div class="bg-white rounded-lg shadow-lg p-4">
-    <h3 class="text-lg font-semibold text-gray-700 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-t-lg">Préstamos</h3>
-    <table class="w-full border-collapse">
-      <thead>
-        <tr class="bg-gray-100">
-          <th class="p-2 text-left">Nombre Deudor</th>
-          <th class="p-2 text-center">Estado</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let loan of loans" class="border-b">
-          <td class="p-2">{{ loan.deudor }}</td>
-          <td class="p-2 text-center">{{ loan.estado }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
+  <!-- ⚡ Botón flotante rápido -->
+  <button
+    class="fixed bottom-5 right-5 bg-blue-700 hover:bg-blue-600 text-white text-2xl p-4 rounded-full shadow-lg transition"
+    (click)="irAgregarRapido()" title="Agregar algo rápido">
+    <i class="fas fa-plus"></i>
+  </button>
 
-<!-- 🔹 Casillas de Información -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-  <div class="bg-gradient-to-r from-green-600 to-teal-500 text-white p-4 rounded-lg shadow-md">
-    <h3 class="text-lg font-semibold">Total en Cartera</h3>
-    <p class="text-2xl font-bold">{{ totalWallet | currency }}</p>
-  </div>
-  <div class="bg-gradient-to-r from-red-600 to-orange-600 text-white p-4 rounded-lg shadow-md">
-    <h3 class="text-lg font-semibold">Total Deudas Pendientes</h3>
-    <p class="text-2xl font-bold">{{ totalPendingDebts | currency }}</p>
-  </div>
-  <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-lg shadow-md">
-    <h3 class="text-lg font-semibold">Total Préstamos Pendientes</h3>
-    <p class="text-2xl font-bold">{{ totalPendingLoans | currency }}</p>
-  </div>
-</div>
-
-  
 </div>

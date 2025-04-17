@@ -1,8 +1,10 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WalletService } from '../../services/wallet.service';
 import { WalletAccount } from '../../models/wallet.model';
+import { DateService } from '../../services/date.service'; // ✅ Nuevo
+import { Subscription } from 'rxjs'; // ✅ Nuevo
 
 export interface WalletAccountWithId extends WalletAccount {
   id: string;
@@ -16,9 +18,10 @@ export interface WalletAccountWithId extends WalletAccount {
   styleUrls: ['./wallet.component.css'],
   providers: [DecimalPipe]
 })
-export default class WalletComponent implements OnInit {
+export default class WalletComponent implements OnInit, OnDestroy {
   private walletService = inject(WalletService);
   private decimalPipe = inject(DecimalPipe);
+  private dateService = inject(DateService); // ✅ Nuevo
 
   wallet: WalletAccountWithId[] = [];
 
@@ -30,15 +33,28 @@ export default class WalletComponent implements OnInit {
   editedId: string | null = null;
 
   readonly userId = JSON.parse(localStorage.getItem('user') || '{}').localId;
-  readonly year = '2024';
-  readonly month = '01';
+
+  currentYear: string = '';
+  currentMonth: string = '';
+  private dateSubscription: Subscription | undefined; // ✅ Nuevo
 
   ngOnInit() {
-    this.loadWallet();
+    // ✅ Reacción a cambio de mes/año
+    this.dateSubscription = this.dateService.selectedDate$.subscribe(date => {
+      if (date.year && date.month) {
+        this.currentYear = date.year;
+        this.currentMonth = date.month;
+        this.loadWallet();
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.dateSubscription?.unsubscribe();
   }
 
   loadWallet() {
-    this.walletService.getWallet(this.userId, this.year, this.month).subscribe({
+    this.walletService.getWallet(this.userId, this.currentYear, this.currentMonth).subscribe({
       next: (data) => {
         this.wallet = Object.entries(data).map(([id, item]) => ({ id, ...item }));
       },
@@ -63,7 +79,7 @@ export default class WalletComponent implements OnInit {
       return;
     }
 
-    this.walletService.addAccount(this.userId, this.year, this.month, this.newAccount).subscribe({
+    this.walletService.addAccount(this.userId, this.currentYear, this.currentMonth, this.newAccount).subscribe({
       next: () => {
         this.loadWallet();
         this.closeModal();
@@ -89,7 +105,7 @@ export default class WalletComponent implements OnInit {
   saveEditedAccount() {
     if (!this.editedId) return;
 
-    this.walletService.updateAccount(this.userId, this.year, this.month, this.editedId, this.editedAccount).subscribe({
+    this.walletService.updateAccount(this.userId, this.currentYear, this.currentMonth, this.editedId, this.editedAccount).subscribe({
       next: () => {
         this.loadWallet();
         this.closeEditModal();
@@ -104,7 +120,7 @@ export default class WalletComponent implements OnInit {
     const confirmDelete = confirm('¿Estás seguro de eliminar esta cuenta?');
     if (!confirmDelete) return;
 
-    this.walletService.deleteAccount(this.userId, this.year, this.month, id).subscribe({
+    this.walletService.deleteAccount(this.userId, this.currentYear, this.currentMonth, id).subscribe({
       next: () => {
         this.loadWallet();
       },
