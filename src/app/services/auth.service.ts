@@ -12,6 +12,7 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
+  // método: Iniciar sesión con correo y contraseña
   login(email: string, password: string): Observable<any> {
     const url = `${this.baseUrl}:signInWithPassword?key=${this.apiKey}`;
     const body = { email, password, returnSecureToken: true };
@@ -26,12 +27,14 @@ export class AuthService {
     );
   }
 
+  // método: Cerrar sesión y limpiar localStorage
   logout() {
     localStorage.removeItem('user');
     localStorage.removeItem('selectedYear');
     localStorage.removeItem('selectedMonth');
   }
 
+  // método: Verificar si el usuario está logueado
   isLoggedIn(): boolean {
     if (typeof window !== 'undefined') {
       return !!localStorage.getItem('user');
@@ -39,10 +42,12 @@ export class AuthService {
     return false;
   }
 
+  // método: Obtener datos del usuario guardados en localStorage
   getUser(): any {
     return JSON.parse(localStorage.getItem('user') || '{}');
   }
 
+  // método: Registrar un nuevo usuario con correo y contraseña
   register(email: string, password: string): Observable<any> {
     const url = `${this.baseUrl}:signUp?key=${this.apiKey}`;
     const body = { email, password, returnSecureToken: true };
@@ -57,6 +62,7 @@ export class AuthService {
     );
   }
 
+  // método: Guardar perfil de usuario en la base de datos al momento de registrarse
   saveUserProfile(userId: string, name: string, correo: string): Observable<any> {
     const url = `https://micartera-acd5b-default-rtdb.firebaseio.com/${userId}.json`;
 
@@ -67,7 +73,7 @@ export class AuthService {
         "-notif1": {
           mensaje: "Bienvenido a MiCartera",
           leido: false,
-          fecha: new Date().toISOString()
+          fecha: new Date().toLocaleString() // guardado con hora local
         }
       }
     }).pipe(
@@ -80,9 +86,32 @@ export class AuthService {
     );
   }
 
+  // método: Obtener todos los datos del usuario desde Firebase (por su UID)
   getUserData(uid: string): Observable<any> {
     const url = `https://micartera-acd5b-default-rtdb.firebaseio.com/${uid}.json`;
     return this.http.get<any>(url);
   }
 
+  // método: Obtener notificaciones del usuario
+  getUserNotifications(uid: string): Observable<any> {
+    const url = `https://micartera-acd5b-default-rtdb.firebaseio.com/${uid}/notificaciones.json`;
+    return this.http.get<any>(url);
+  }
+
+  // método: Marcar una notificación como leída
+  markNotificationAsRead(uid: string, notifId: string): Observable<any> {
+    const url = `https://micartera-acd5b-default-rtdb.firebaseio.com/${uid}/notificaciones/${notifId}/leido.json`;
+    return this.http.put(url, true);
+  }
+
+  // método: Agregar manualmente una notificación
+  addNotification(uid: string, mensaje: string): Observable<any> {
+    const url = `https://micartera-acd5b-default-rtdb.firebaseio.com/${uid}/notificaciones.json`;
+    const body = {
+      mensaje,
+      leido: false,
+      fecha: new Date().toLocaleString() // guardado con hora local
+    };
+    return this.http.post(url, body);
+  }
 }

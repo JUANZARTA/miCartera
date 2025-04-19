@@ -1,8 +1,9 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DateService } from '../../../services/date.service';
 import { Subscription } from 'rxjs';
 import { Router, NavigationEnd } from '@angular/router';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-header',
@@ -28,18 +29,22 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   userName: string = ''; // Para mostrar nombre si luego se quiere
 
+  notifications: any[] = [];
+  unreadCount: number = 0;
+  showNotifications: boolean = false;
+
   private dateSubscription?: Subscription;
   private routeSubscription?: Subscription;
+  private authService = inject(AuthService);
 
   constructor(private dateService: DateService, private router: Router) {}
 
   ngOnInit(): void {
     this.generateYearRange(2025, 2050);
 
-    // Obtener la fecha actual
     const today = new Date();
     const defaultYear = today.getFullYear();
-    const defaultMonth = today.getMonth(); // 0-indexed
+    const defaultMonth = today.getMonth();
 
     const savedYear = this.dateService.getSelectedYear();
     const savedMonth = this.dateService.getSelectedMonth();
@@ -54,20 +59,19 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.dateService.setDate(defaultYear, defaultMonth + 1);
     }
 
-
-    // Escucha la selección actual de año y mes
     this.dateSubscription = this.dateService.selectedDate$.subscribe(({ year, month }) => {
       this.currentYear = year ?? '';
       this.currentMonth = month ?? '';
     });
 
-    // Escucha cambios de ruta para el breadcrumb
     this.routeSubscription = this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
         const path = event.urlAfterRedirects.split('/');
         this.currentRoute = this.mapRouteToTitle(path[path.length - 1]);
       }
     });
+
+    this.loadNotifications();
   }
 
   ngOnDestroy(): void {
@@ -122,5 +126,41 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   capitalize(value: string): string {
     return value.charAt(0).toUpperCase() + value.slice(1);
+  }
+
+  // 📩 NOTIFICACIONES
+
+  toggleNotifications(): void {
+    this.showNotifications = !this.showNotifications;
+  }
+
+  loadNotifications(): void {
+    const user = this.authService.getUser();
+    const uid = user?.localId;
+    if (!uid) return;
+
+    this.authService.getUserNotifications(uid).subscribe((data) => {
+      if (data) {
+        this.notifications = Object.entries(data).map(([key, value]: any) => ({
+          id: key,
+          ...value
+        }));
+        this.unreadCount = this.notifications.filter(n => !n.leido).length;
+      }
+    });
+  }
+
+  markAsRead(notifId: string): void {
+    const user = this.authService.getUser();
+    const uid = user?.localId;
+    if (!uid) return;
+
+    this.authService.markNotificationAsRead(uid, notifId).subscribe(() => {
+      this.notifications = this.notifications.map(n => {
+        if (n.id === notifId) n.leido = true;
+        return n;
+      });
+      this.unreadCount = this.notifications.filter(n => !n.leido).length;
+    });
   }
 }
