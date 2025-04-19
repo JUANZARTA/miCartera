@@ -1,0 +1,10 @@
+# Elimina por completo la carpeta 'dist' para asegurarte de que el nuevo build sea limpio
+Remove-Item -Recurse -Force .\dist
+
+
+# Compila el proyecto Angular en modo producción con el baseHref correcto para GitHub Pages
+ng build --configuration production
+
+
+# Publica el contenido de 'dist/miCartera' directamente al branch 'gh-pages' de GitHub
+npx angular-cli-ghpages --dir=dist/miCartera
