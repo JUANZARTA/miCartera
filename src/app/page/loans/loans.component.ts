@@ -5,6 +5,7 @@ import { LoanService } from '../../services/loans.service';
 import { Loan } from '../../models/loans.model';
 import { DateService } from '../../services/date.service'; // ✅ Nuevo
 import { Subscription } from 'rxjs'; // ✅ Nuevo
+import { AuthService } from '../../services/auth.service'; // ✅ nuevo
 
 export interface LoanWithId extends Loan {
   id: string;
@@ -23,6 +24,7 @@ export default class LoansComponent implements OnInit, OnDestroy {
   private loanService = inject(LoanService);
   private decimalPipe = inject(DecimalPipe);
   private dateService = inject(DateService); // ✅ Nuevo
+  private authService = inject(AuthService); // ✅ nuevo
 
   // Datos
   loans: LoanWithId[] = [];
@@ -66,12 +68,27 @@ export default class LoansComponent implements OnInit, OnDestroy {
     this.loanService.getLoans(this.userId, this.currentYear, this.currentMonth).subscribe({
       next: (data) => {
         this.loans = Object.entries(data).map(([id, loan]) => ({ id, ...loan }));
+
+        const today = new Date().toISOString().split('T')[0];
+
+        for (const loan of this.loans) {
+          if (loan.estado === 'Pendiente') {
+            // ✅ Préstamo vencido
+            if (new Date(loan.fecha_pago) < new Date(today)) {
+              this.authService.addNotification(this.userId, `Venció el préstamo a ${loan.deudor}`).subscribe();
+            }
+
+            // ✅ Recordatorio de cobro
+            this.authService.addNotification(this.userId, `Recordá que ${loan.deudor} te debe $${loan.valor}`).subscribe();
+          }
+        }
       },
       error: (err) => {
         console.error('Error al cargar préstamos:', err);
       },
     });
   }
+
 
   // ======================
   // Modal: Agregar Préstamo

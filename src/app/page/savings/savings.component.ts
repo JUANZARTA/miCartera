@@ -5,6 +5,7 @@ import { SavingsService } from '../../services/savings.service';
 import { Saving } from '../../models/savings.model';
 import { DateService } from '../../services/date.service'; // ✅ Nuevo
 import { Subscription } from 'rxjs'; // ✅ Nuevo
+import { AuthService } from '../../services/auth.service'; // ✅ nuevo
 
 export interface SavingWithId extends Saving {
   id: string;
@@ -23,6 +24,7 @@ export default class SavingsComponent implements OnInit, OnDestroy {
   private savingsService = inject(SavingsService);
   private decimalPipe = inject(DecimalPipe);
   private dateService = inject(DateService); // ✅ Nuevo
+  private authService = inject(AuthService); // ✅ nuevo
 
   // Datos
   savings: SavingWithId[] = [];
@@ -64,7 +66,13 @@ export default class SavingsComponent implements OnInit, OnDestroy {
     this.savingsService.getSavings(this.userId, this.currentYear, this.currentMonth).subscribe({
       next: (data) => {
         this.savings = Object.entries(data).map(([id, s]) => ({ id, ...s }));
+
+        // ✅ Notificación: no has ahorrado este mes
+        if (this.savings.length === 0) {
+          this.authService.addNotification(this.userId, 'No has ahorrado este mes').subscribe();
+        }
       },
+
       error: (err) => {
         console.error('Error al cargar ahorros:', err);
       },
@@ -93,9 +101,13 @@ export default class SavingsComponent implements OnInit, OnDestroy {
       next: () => {
         this.loadSavings();
         this.closeModal();
+
+        // ✅ Notificación: agregado ahorro
+        this.authService.addNotification(this.userId, 'Has agregado dinero a tus ahorros').subscribe();
       },
     });
   }
+
 
   // ======================
   // Modal: Editar Ahorro

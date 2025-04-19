@@ -48,6 +48,23 @@ export default class LoginComponent implements OnInit {
           this.authService.getUserData(uid).subscribe((userData) => {
             const nombre = userData?.nombre || '';
             this.showWelcomeModal(nombre);
+
+            // ✅ Nuevas recomendaciones de ahorro
+            const recomendaciones = [
+              "Reservá al menos el 10% de tus ingresos como ahorro.",
+              "Evitá gastos pequeños repetitivos, pueden sumar mucho.",
+              "Asigná metas a tus ahorros: eso te motiva más."
+            ];
+
+            this.authService.getUserNotifications(uid).subscribe((notifs) => {
+              const existentes = notifs ? Object.values(notifs).map((n: any) => n.mensaje) : [];
+
+              recomendaciones.forEach(msg => {
+                if (!existentes.includes(msg)) {
+                  this.authService.addNotification(uid, msg).subscribe();
+                }
+              });
+            });
           });
         },
         error: (errorMsg) => {

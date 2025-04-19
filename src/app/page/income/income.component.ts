@@ -5,6 +5,8 @@ import { IncomeService } from '../../services/income.service';
 import { CategoriaIngreso, Income } from '../../models/income.model';
 import { DateService } from '../../services/date.service'; // ✅ Nuevo
 import { Subscription } from 'rxjs'; // ✅ Nuevo
+import { AuthService } from '../../services/auth.service'; // ✅ Nuevo
+
 
 export interface IncomeWithId extends Income {
   id: string;
@@ -23,6 +25,7 @@ export default class IncomeComponent implements OnInit, OnDestroy {
   private incomeService = inject(IncomeService);
   private decimalPipe = inject(DecimalPipe);
   private dateService = inject(DateService); // ✅ Nuevo
+  private authService = inject(AuthService); // ✅ Nuevo
 
   // Datos
   incomes: IncomeWithId[] = [];
@@ -96,9 +99,13 @@ export default class IncomeComponent implements OnInit, OnDestroy {
       next: () => {
         this.loadIncomes();
         this.closeModal();
+
+        // ✅ Notificación de ingreso registrado
+        this.authService.addNotification(this.userId, 'Nuevo ingreso registrado').subscribe();
       },
     });
   }
+
 
   // ======================
   // Modal: Editar Ingreso

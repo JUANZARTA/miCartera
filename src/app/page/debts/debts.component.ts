@@ -5,6 +5,8 @@ import { DebtService } from '../../services/debts.service';
 import { Debt } from '../../models/debt.model';
 import { DateService } from '../../services/date.service'; // ✅ Nuevo
 import { Subscription } from 'rxjs'; // ✅ Nuevo
+import { AuthService } from '../../services/auth.service'; // ✅ nuevo
+
 
 export interface DebtWithId extends Debt {
   id: string;
@@ -23,6 +25,8 @@ export default class DebtsComponent implements OnInit, OnDestroy {
   private debtService = inject(DebtService);
   private decimalPipe = inject(DecimalPipe);
   private dateService = inject(DateService); // ✅ Nuevo
+  private authService = inject(AuthService); // ✅ nuevo
+
 
   // Datos
   debts: DebtWithId[] = [];
@@ -66,12 +70,29 @@ export default class DebtsComponent implements OnInit, OnDestroy {
     this.debtService.getDebts(this.userId, this.currentYear, this.currentMonth).subscribe({
       next: (data) => {
         this.debts = Object.entries(data).map(([id, d]) => ({ id, ...d }));
+
+        const today = new Date().toISOString().split('T')[0];
+
+        for (const debt of this.debts) {
+          if (debt.estado === 'Pendiente') {
+            // ✅ Deuda vence hoy
+            if (debt.fecha_pago === today) {
+              this.authService.addNotification(this.userId, `Tienes una deuda que vence hoy con ${debt.acreedor}`).subscribe();
+            }
+
+            // ✅ Deuda vencida
+            if (new Date(debt.fecha_pago) < new Date(today)) {
+              this.authService.addNotification(this.userId, `Tienes una deuda vencida con ${debt.acreedor}`).subscribe();
+            }
+          }
+        }
       },
       error: (err) => {
         console.error('Error al cargar deudas:', err);
       }
     });
   }
+
 
   // ======================
   // Modal: Agregar Deuda
@@ -171,7 +192,13 @@ export default class DebtsComponent implements OnInit, OnDestroy {
     this.debtService.updateDebt(this.userId, this.currentYear, this.currentMonth, debt.id, updatedDebt).subscribe({
       next: () => {
         this.loadDebts();
+
+        // ✅ Notificar si la deuda fue pagada
+        if (updatedStatus === 'Pagado') {
+          this.authService.addNotification(this.userId, `Pagaste tu deuda con ${debt.acreedor} correctamente`).subscribe();
+        }
       },
+
       error: (err) => {
         console.error('Error al cambiar estado de la deuda:', err);
       }

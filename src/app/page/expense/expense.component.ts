@@ -5,6 +5,7 @@ import { ExpenseService } from '../../services/expense.service';
 import { CategoriaGasto, Expense } from '../../models/expense.model';
 import { DateService } from '../../services/date.service'; // ✅ Nuevo
 import { Subscription } from 'rxjs'; // ✅ Nuevo
+import { AuthService } from '../../services/auth.service'; // ✅ nuevo
 
 export interface ExpenseWithId extends Expense {
   id: string;
@@ -22,6 +23,7 @@ export default class ExpenseComponent implements OnInit, OnDestroy {
   private expenseService = inject(ExpenseService);
   private decimalPipe = inject(DecimalPipe);
   private dateService = inject(DateService); // ✅ Nuevo
+  private authService = inject(AuthService); // ✅ nuevo
 
   expenses: ExpenseWithId[] = [];
 
@@ -90,11 +92,31 @@ export default class ExpenseComponent implements OnInit, OnDestroy {
 
     this.expenseService.addExpense(this.userId, this.currentYear, this.currentMonth, this.newExpense).subscribe({
       next: () => {
-        this.loadExpenses(); // Recargar
+        this.loadExpenses();
         this.closeModal();
-      },
+
+        // ✅ Gasto alto
+        if (this.newExpense.valor > 100000) {
+          this.authService.addNotification(this.userId, `Gasto alto registrado: $${this.newExpense.valor}`).subscribe();
+        }
+
+        // ✅ Gasto supera estimación individual
+        if (this.newExpense.estimacion && this.newExpense.valor > this.newExpense.estimacion) {
+          this.authService.addNotification(this.userId, `Superaste la estimación para ${this.newExpense.categoria}`).subscribe();
+        }
+
+        // ✅ Gastos totales superan el 80% del total estimado
+        const totalGastos = this.getTotalExpenses() + this.newExpense.valor;
+        const totalEstimado = this.getTotalEstimations() + this.newExpense.estimacion;
+
+        const porcentaje = (totalGastos / totalEstimado) * 100;
+        if (totalEstimado > 0 && porcentaje >= 80) {
+          this.authService.addNotification(this.userId, `Ya has gastado el ${porcentaje.toFixed(0)}% de tu presupuesto mensual`).subscribe();
+        }
+      }
     });
   }
+
 
   // Métodos para editar y eliminar gastos
   openEditModal(id: string) {

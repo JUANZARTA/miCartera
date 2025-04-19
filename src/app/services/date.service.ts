@@ -1,6 +1,7 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { BehaviorSubject, combineLatest, map } from 'rxjs';
+import { HttpClient } from '@angular/common/http'; // ✅ nuevo
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +11,10 @@ export class DateService {
   private monthSubject: BehaviorSubject<string>;
   private isBrowser: boolean;
 
-  constructor(@Inject(PLATFORM_ID) platformId: Object) {
+  constructor(
+    @Inject(PLATFORM_ID) platformId: Object,
+    private http: HttpClient // ✅ nuevo
+  ) {
     this.isBrowser = isPlatformBrowser(platformId);
 
     if (this.isBrowser) {
@@ -83,5 +87,29 @@ export class DateService {
       localStorage.setItem('selectedYear', year);
       localStorage.setItem('selectedMonth', month);
     }
+  }
+
+  // método: Notificar nuevo mes al usuario
+  notifyMonthChange(uid: string, year: string, month: string): void {
+    const mes = this.getMonthName(month);
+    const mensaje = `Nuevo mes detectado: ${mes} ${year}`;
+    const url = `https://micartera-acd5b-default-rtdb.firebaseio.com/${uid}/notificaciones.json`;
+
+    const body = {
+      mensaje,
+      leido: false,
+      fecha: new Date().toLocaleString()
+    };
+
+    this.http.post(url, body).subscribe();
+  }
+
+  // método: Obtener nombre del mes en español
+  getMonthName(month: string): string {
+    const meses = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+    return meses[parseInt(month) - 1] || '';
   }
 }

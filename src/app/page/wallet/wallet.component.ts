@@ -5,6 +5,7 @@ import { WalletService } from '../../services/wallet.service';
 import { WalletAccount } from '../../models/wallet.model';
 import { DateService } from '../../services/date.service'; // ✅ Nuevo
 import { Subscription } from 'rxjs'; // ✅ Nuevo
+import { AuthService } from '../../services/auth.service'; // ✅ nuevo
 
 export interface WalletAccountWithId extends WalletAccount {
   id: string;
@@ -22,6 +23,7 @@ export default class WalletComponent implements OnInit, OnDestroy {
   private walletService = inject(WalletService);
   private decimalPipe = inject(DecimalPipe);
   private dateService = inject(DateService); // ✅ Nuevo
+  private authService = inject(AuthService); // ✅ nuevo
 
   wallet: WalletAccountWithId[] = [];
 
@@ -57,12 +59,19 @@ export default class WalletComponent implements OnInit, OnDestroy {
     this.walletService.getWallet(this.userId, this.currentYear, this.currentMonth).subscribe({
       next: (data) => {
         this.wallet = Object.entries(data).map(([id, item]) => ({ id, ...item }));
+
+        // ✅ Notificación si el total es bajo
+        const total = this.getTotalWallet();
+        if (total < 100000) {
+          this.authService.addNotification(this.userId, 'Tu efectivo bajó a menos de $100.000').subscribe();
+        }
       },
       error: (err) => {
         console.error('Error al cargar la cartera:', err);
       },
     });
   }
+
 
   openModal() {
     this.isModalOpen = true;

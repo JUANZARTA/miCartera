@@ -109,7 +109,18 @@ export class HeaderComponent implements OnInit, OnDestroy {
     const mes = monthIndex + 1;
     this.dateService.setDate(this.selectedYear!, mes);
     console.log('Fecha seleccionada →', this.selectedYear, mes);
+
+    // ✅ Notificar cambio de mes
+    const user = this.authService.getUser();
+    const uid = user?.localId;
+
+    if (uid) {
+      const yearStr = this.selectedYear!.toString();
+      const monthStr = mes.toString().padStart(2, '0');
+      this.dateService.notifyMonthChange(uid, yearStr, monthStr);
+    }
   }
+
 
   mapRouteToTitle(route: string): string {
     switch (route) {
