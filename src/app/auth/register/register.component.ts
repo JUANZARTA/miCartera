@@ -18,7 +18,8 @@ export default class RegisterComponent implements OnInit {
 
   registerForm: FormGroup;
   errorMessage = '';
-  successMessage = '';
+  showModal = false;
+  showSuccessModal = false;
 
   constructor() {
     this.registerForm = this.fb.group({
@@ -31,43 +32,58 @@ export default class RegisterComponent implements OnInit {
 
   ngOnInit(): void {}
 
-  // Verificar campos inválidos
   isInvalid(field: string): boolean {
     return this.registerForm.controls[field].invalid && this.registerForm.controls[field].touched;
   }
 
-  // Validar que las contraseñas coincidan
   private passwordsMatch(formGroup: FormGroup) {
     return formGroup.get('password')?.value === formGroup.get('confirmPassword')?.value
       ? null
       : { mismatch: true };
   }
 
-  // Enviar formulario de registro
   onSubmit() {
     if (this.registerForm.valid) {
-      const { email, password } = this.registerForm.value;
+      const { name, email, password } = this.registerForm.value;
 
       this.authService.register(email, password).subscribe({
-        next: () => {
-          this.successMessage = '✅ Registro exitoso. Redirigiendo al login...';
-          setTimeout(() => {
-            this.router.navigate(['/login']);
-          }, 1500);
+        next: (res) => {
+          const uid = res.localId;
+          this.authService.saveUserProfile(uid, name, email).subscribe({
+            next: () => {
+              this.showSuccessModal = true;
+              setTimeout(() => {
+                this.showSuccessModal = false;
+                this.router.navigate(['/login']);
+              }, 1500);
+            },
+            error: () => {
+              this.showErrorModal('Error al guardar el nombre.');
+            }
+          });
         },
         error: (err) => {
-          this.errorMessage = this.getFirebaseErrorMessage(err);
+          this.showErrorModal(this.getFirebaseErrorMessage(err));
         }
       });
     }
   }
 
+  showErrorModal(message: string) {
+    this.errorMessage = message;
+    this.showModal = true;
+  }
+
+  closeModal() {
+    this.showModal = false;
+  }
+
   private getFirebaseErrorMessage(code: string): string {
     switch (code) {
       case 'EMAIL_EXISTS':
-        return '❌ Este correo ya está registrado.';
+        return 'Este correo ya está registrado.';
       default:
-        return '❌ Ha ocurrido un error inesperado.';
+        return 'Ha ocurrido un error inesperado.';
     }
   }
 }

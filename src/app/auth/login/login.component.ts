@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
-import { DateService } from '../../services/date.service'; // Asegúrate de importar esto
+import { DateService } from '../../services/date.service';
 
 @Component({
   selector: 'app-login',
@@ -16,13 +16,13 @@ export default class LoginComponent implements OnInit {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private authService = inject(AuthService);
-
-  private dateService = inject(DateService); // agrega esto a tu clase
+  private dateService = inject(DateService);
 
   loginForm: FormGroup;
   showModal = false;
   showSuccessModal = false;
   errorMessage = '';
+  welcomeName: string = '';
 
   constructor() {
     this.loginForm = this.fb.group({
@@ -42,8 +42,13 @@ export default class LoginComponent implements OnInit {
       const { email, password } = this.loginForm.value;
 
       this.authService.login(email, password).subscribe({
-        next: () => {
-          this.showWelcomeModal();
+        next: (res) => {
+          const uid = res.localId;
+
+          this.authService.getUserData(uid).subscribe((userData) => {
+            const nombre = userData?.nombre || '';
+            this.showWelcomeModal(nombre);
+          });
         },
         error: (errorMsg) => {
           this.showErrorModal(this.getFirebaseErrorMessage(errorMsg));
@@ -61,10 +66,10 @@ export default class LoginComponent implements OnInit {
     this.showModal = false;
   }
 
-  showWelcomeModal() {
+  showWelcomeModal(nombre: string) {
+    this.welcomeName = nombre;
     this.showSuccessModal = true;
 
-    // 🔥 Establecer fecha actual al iniciar sesión
     this.dateService.resetToCurrentDate();
 
     setTimeout(() => {
@@ -72,7 +77,6 @@ export default class LoginComponent implements OnInit {
       this.router.navigate(['app/home']);
     }, 1000);
   }
-
 
   private getFirebaseErrorMessage(code: string): string {
     switch (code) {
