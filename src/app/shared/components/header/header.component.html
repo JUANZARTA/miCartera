@@ -1,15 +1,84 @@
-<header class="w-full px-4 py-2 bg-white shadow flex items-center justify-between relative">
+<div class="flex flex-col-reverse justify-between gap-6 md:flex-row md:items-center">
+  <div class="capitalize">
 
-  <!-- Breadcrumb / Ruta actual -->
-  <div class="text-sm text-gray-500">
-    {{ currentRoute }}
+    <!-- Fecha actual seleccionada -->
+    <p class="text-sm font-semibold text-gray-600 mb-1">
+      Fecha actual: {{ currentYear }}/{{ currentMonth }}
+    </p>
+
+    <!-- Ruta Breadcrumb -->
+    <nav aria-label="breadcrumb" class="w-max">
+      <ol class="flex flex-wrap items-center w-full bg-opacity-60 rounded-md bg-transparent p-0 transition-all">
+        <li
+          class="flex items-center text-blue-gray-900 antialiased font-sans text-sm font-normal leading-normal cursor-pointer transition-colors duration-300 hover:text-light-blue-500">
+          <a routerLink="/app">
+            <p
+              class="block antialiased font-sans text-sm leading-normal text-blue-900 font-normal opacity-50 transition-all hover:text-blue-500 hover:opacity-100">
+              Inicio
+            </p>
+          </a>
+          <span class="text-gray-500 text-sm mx-2 pointer-events-none select-none">/</span>
+        </li>
+        <li
+          class="flex items-center text-blue-900 font-sans text-sm font-normal leading-normal cursor-pointer transition-colors duration-300 hover:text-blue-500">
+          <p class="text-blue-gray-900 font-normal">
+            {{ currentRoute }}
+          </p>
+        </li>
+      </ol>
+    </nav>
+
+    <h6 class="tracking-normal font-sans text-base font-semibold leading-relaxed text-gray-900">
+      Maneja tu Dinero con Confianza
+    </h6>
   </div>
 
-  <!-- Mes y año actual + botón -->
-  <div class="flex items-center gap-2">
-    <span class="text-gray-700 text-sm">{{ months[+currentMonth - 1] }} {{ currentYear }}</span>
-    <button (click)="openMonthModal()" class="text-blue-500 hover:underline text-sm">Cambiar</button>
-  </div>
+  <div class="flex items-center">
+    <!-- Botón para abrir el modal -->
+    <button (click)="openMonthModal()" class="ml-4 bg-blue-500 text-white px-3 py-1 rounded-md">
+      Cambiar Mes
+    </button>
+
+    <!-- Modal de selección de año y mes -->
+    <div *ngIf="showMonthModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div class="bg-white p-6 rounded-lg shadow-lg w-96 max-h-[90vh] overflow-y-auto">
+        <h2 class="text-lg font-semibold mb-4 text-center">
+          {{ !selectedYear ? 'Selecciona un Año' : 'Selecciona un Mes' }}
+        </h2>
+
+        <!-- Mostrar años -->
+        <div *ngIf="!selectedYear" class="max-h-60 overflow-y-auto mb-4 px-1 py-2 border rounded-md space-y-2">
+          <button *ngFor="let year of years" (click)="selectYear(year)"
+            class="w-full px-4 py-2 rounded-lg bg-gray-200 hover:bg-blue-500 text-gray-800 hover:text-white transition text-center">
+            {{ year }}
+          </button>
+        </div>
+
+        <!-- Mostrar meses si hay año seleccionado -->
+        <div *ngIf="selectedYear">
+          <div class="flex justify-center mb-4">
+            <button (click)="clearYearSelection()"
+              class="px-4 py-2 bg-blue-100 text-blue-800 font-medium rounded-md shadow-sm hover:bg-blue-200 transition">
+              Cambiar Año ({{ selectedYear }})
+            </button>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 mb-4">
+            <button *ngFor="let month of months; let i = index" (click)="selectMonth(i)"
+              [class.bg-blue-500]="i === selectedMonth" [class.text-cyan-700]="i === selectedMonth"
+              class="p-2 rounded-lg bg-gray-200 hover:bg-blue-500 text-gray-800 hover:text-white transition">
+              {{ month }}
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-4 flex justify-end">
+          <button (click)="closeMonthModal()" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
 
   <!-- Botón de notificaciones -->
   <div class="relative">
@@ -42,77 +111,7 @@
     </div>
   </div>
 
-</header>
 
-<!-- Modal de selección de mes y año -->
-<div *ngIf="showMonthModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-  <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
-
-    <h3 class="text-lg font-semibold mb-4 text-center text-gray-800">Selecciona el año y mes</h3>
-
-    <!-- Años -->
-    <div class="mb-4">
-      <h4 class="text-sm font-semibold text-gray-700 mb-2">Año</h4>
-      <div class="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-        <button *ngFor="let year of years" (click)="selectYear(year)"
-                [class.bg-blue-500]="selectedYear === year"
-                [class.text-white]="selectedYear === year"
-                class="px-3 py-1 rounded border border-gray-300 hover:bg-blue-100 transition">
-          {{ year }}
-        </button>
-      </div>
-    </div>
-
-    <!-- Meses -->
-    <div class="mb-4">
-      <h4 class="text-sm font-semibold text-gray-700 mb-2">Mes</h4>
-      <div class="grid grid-cols-3 gap-2">
-        <button *ngFor="let month of months; let i = index"
-                (click)="selectMonth(i)"
-                [class.bg-blue-500]="selectedMonth === i"
-                [class.text-white]="selectedMonth === i"
-                class="px-3 py-1 rounded border border-gray-300 hover:bg-blue-100 transition">
-          {{ month }}
-        </button>
-      </div>
-    </div>
-
-    <div class="flex justify-between mt-6">
-      <button (click)="closeMonthModal()" class="text-sm text-gray-500 hover:underline">Cancelar</button>
-      <button (click)="clearYearSelection()" class="text-sm text-red-500 hover:underline">Limpiar Año</button>
-    </div>
 
   </div>
-
-      <!-- barra de Busqueda-->
-    <!-- <div class="mr-auto md:mr-4 md:w-56">
-        <div class="relative w-full min-w-[200px] h-10">
-          <input class="peer w-full h-full bg-transparent text-gray-700 font-sans font-normal outline outline-0 focus:outline-0 disabled:bg-blue-gray-50 disabled:border-0 transition-all placeholder-shown:border placeholder-shown:border-blue-gray-200 placeholder-shown:border-t-blue-gray-200 border focus:border-2 border-t-transparent focus:border-t-transparent text-sm px-3 py-2.5 rounded-[7px] border-blue-gray-200 focus:border-blue-500" placeholder=" ">
-          <label class="flex w-full h-full select-none pointer-events-none absolute left-0 font-normal peer-placeholder-shown:text-gray-500 leading-tight peer-focus:leading-tight peer-disabled:text-transparent peer-disabled:peer-placeholder-shown:text-blue-gray-500 transition-all -top-1.5 peer-placeholder-shown:text-sm text-[11px] peer-focus:text-[11px] before:content[' '] before:block before:box-border before:w-2.5 before:h-1.5 before:mt-[6.5px] before:mr-1 peer-placeholder-shown:before:border-transparent before:rounded-tl-md before:border-t peer-focus:before:border-t-2 before:border-l peer-focus:before:border-l-2 before:pointer-events-none before:transition-all peer-disabled:before:border-transparent after:content[' '] after:block after:flex-grow after:box-border after:w-2.5 after:h-1.5 after:mt-[6.5px] after:ml-1 peer-placeholder-shown:after:border-transparent after:rounded-tr-md after:border-t peer-focus:after:border-t-2 after:border-r peer-focus:after:border-r-2 after:pointer-events-none after:transition-all peer-disabled:after:border-transparent peer-placeholder-shown:leading-[3.75] text-blue-gray-400 peer-focus:text-blue-500 before:border-blue-gray-200 peer-focus:before:border-blue-500 after:border-blue-gray-200 peer-focus:after:border-blue-500">Buscar</label>
-        </div>
-      </div> -->
-
-    <!-- <button class="relative middle none font-sans font-medium text-center uppercase transition-all disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none w-10 max-w-[40px] h-10 max-h-[40px] rounded-lg text-xs text-gray-500 hover:bg-blue-gray-500/10 active:bg-blue-gray-500/30 grid xl:hidden" type="button">
-        <span class="absolute top-1/2 left-1/2 transform -translate-y-1/2 -translate-x-1/2">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" stroke-width="3" class="h-6 w-6 text-blue-gray-500">
-            <path fill-rule="evenodd" d="M3 6.75A.75.75 0 013.75 6h16.5a.75.75 0 010 1.5H3.75A.75.75 0 013 6.75zM3 12a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75A.75.75 0 013 12zm0 5.25a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75a.75.75 0 01-.75-.75z" clip-rule="evenodd"></path>
-          </svg>
-        </span>
-      </button> -->
-
-    <!--Boton para cuenta-->
-    <!-- <a href="/app/account">
-        <button class="middle none font-sans font-bold center uppercase transition-all disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none text-xs py-3 rounded-lg text-gray-500 hover:bg-blue-gray-500/10 active:bg-blue-gray-500/30 hidden items-center gap-1 px-4 xl:flex" type="button">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="h-5 w-5 text-blue-gray-500">
-            <path fill-rule="evenodd" d="M18.685 19.097A9.723 9.723 0 0021.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 003.065 7.097A9.716 9.716 0 0012 21.75a9.716 9.716 0 006.685-2.653zm-12.54-1.285A7.486 7.486 0 0112 15a7.486 7.486 0 015.855 2.812A8.224 8.224 0 0112 20.25a8.224 8.224 0 01-5.855-2.438zM15.75 9a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" clip-rule="evenodd"></path>
-          </svg>Tu cuenta </button>
-        <button class="relative middle none font-sans font-medium text-center uppercase transition-all disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none w-10 max-w-[40px] h-10 max-h-[40px] rounded-lg text-xs text-gray-500 hover:bg-blue-gray-500/10 active:bg-blue-gray-500/30 grid xl:hidden" type="button">
-          <span class="absolute top-1/2 left-1/2 transform -translate-y-1/2 -translate-x-1/2">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="h-5 w-5 text-blue-gray-500">
-              <path fill-rule="evenodd" d="M18.685 19.097A9.723 9.723 0 0021.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 003.065 7.097A9.716 9.716 0 0012 21.75a9.716 9.716 0 006.685-2.653zm-12.54-1.285A7.486 7.486 0 0112 15a7.486 7.486 0 015.855 2.812A8.224 8.224 0 0112 20.25a8.224 8.224 0 01-5.855-2.438zM15.75 9a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" clip-rule="evenodd"></path>
-            </svg>
-          </span>
-        </button>
-      </a> -->
-
 </div>
