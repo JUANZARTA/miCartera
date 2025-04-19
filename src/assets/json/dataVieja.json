@@ -28,15 +28,6 @@
           }
         }
       }
-    },
-    "nombre": "Usuario 1",
-    "correo": "usuario1@email.com",
-    "notificaciones": {
-      "-notif1": {
-        "mensaje": "Bienvenido a MiCartera",
-        "leido": false,
-        "fecha": "2025-04-18T08:00:00"
-      }
     }
   },
   "UsorIijcpxfEymdA3uZrusvip0g2": {
@@ -290,15 +281,6 @@
           }
         }
       }
-    },
-    "nombre": "Usuario 2",
-    "correo": "usuario2@email.com",
-    "notificaciones": {
-      "-notif1": {
-        "mensaje": "Bienvenido a MiCartera",
-        "leido": false,
-        "fecha": "2025-04-18T08:00:00"
-      }
     }
   },
   "oI6H33Ajl3Rdt8jCgrW7Sv3On4z1": {
@@ -337,15 +319,6 @@
           }
         }
       }
-    },
-    "nombre": "Usuario 3",
-    "correo": "usuario3@email.com",
-    "notificaciones": {
-      "-notif1": {
-        "mensaje": "Bienvenido a MiCartera",
-        "leido": false,
-        "fecha": "2025-04-18T08:00:00"
-      }
     }
   },
   "wuWFKz9vwHS813rq9WRARjbkcZ42": {
@@ -359,7 +332,7 @@
         },
         "gastos": {
           "-ONRH4N-rp3ea1K6Z2Y5": {
-            "categoria": "Variables",
+            "categoria": "Variable",
             "descripcion": "Gasolina ",
             "estimacion": 50000,
             "valor": 20000
@@ -377,7 +350,7 @@
             "valor": 18000
           },
           "-ONRIfbU3o7jtmQ17u4F": {
-            "categoria": "Variables",
+            "categoria": "Variable",
             "descripcion": "Vitos",
             "estimacion": 28000,
             "valor": 13600
@@ -414,17 +387,7 @@
           }
         }
       }
-    },
-    "nombre": "Usuario 4",
-    "correo": "usuario4@email.com",
-    "notificaciones": {
-      "-notif1": {
-        "mensaje": "Bienvenido a MiCartera",
-        "leido": false,
-        "fecha": "2025-04-18T08:00:00"
-      }
     }
   }
 }
-
 
