@@ -3,10 +3,11 @@ import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DebtService } from '../../services/debts.service';
 import { Debt } from '../../models/debt.model';
-import { DateService } from '../../services/date.service'; // ✅ Nuevo
-import { Subscription } from 'rxjs'; // ✅ Nuevo
-import { AuthService } from '../../services/auth.service'; // ✅ nuevo
-
+import { DateService } from '../../services/date.service';
+import { Subscription } from 'rxjs';
+import { AuthService } from '../../services/auth.service';
+import { FinanzasService } from '../../services/finanzas.service';
+import { MatIconModule } from '@angular/material/icon';
 
 export interface DebtWithId extends Debt {
   id: string;
@@ -15,10 +16,10 @@ export interface DebtWithId extends Debt {
 @Component({
   selector: 'app-debts',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatIconModule],
   templateUrl: './debts.component.html',
   styleUrls: ['./debts.component.css'],
-  providers: [DecimalPipe]
+  providers: [DecimalPipe],
 })
 export default class DebtsComponent implements OnInit, OnDestroy {
   // Servicios
@@ -26,7 +27,29 @@ export default class DebtsComponent implements OnInit, OnDestroy {
   private decimalPipe = inject(DecimalPipe);
   private dateService = inject(DateService); // ✅ Nuevo
   private authService = inject(AuthService); // ✅ nuevo
+  private finanzasService = inject(FinanzasService);
 
+  // Variables
+  selectedDebtId: string | null = null;
+
+  // Datos de la deuda
+  incomes: any[] = [];
+  expenses: any[] = [];
+  wallet: any[] = [];
+  loans: any[] = [];
+
+  // Estado financiero
+  estadoFinanciero = '';
+  estadoFinancieroColor: 'verde' | 'rojo' | 'azul' = 'verde';
+  cuadreDescuadre = 0;
+
+  // Nuevo Modal de Eliminar
+  isDeleteModalOpen = false;
+  debtToDeleteId: string | null = null;
+
+  // Nuevo Modal de Agregar Valor
+  isAddValueModalOpen = false;
+  newValue: number = 0;
 
   // Datos
   debts: DebtWithId[] = [];
@@ -50,15 +73,30 @@ export default class DebtsComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     // ✅ Escuchar cambios en el año y mes seleccionados
-    this.dateSubscription = this.dateService.selectedDate$.subscribe(date => {
+    this.dateSubscription = this.dateService.selectedDate$.subscribe((date) => {
       if (date.year && date.month) {
         this.currentYear = date.year;
         this.currentMonth = date.month;
         this.loadDebts();
+
+        // ✅ Llamada correcta al servicio financiero (sin pasar `this`)
+        this.finanzasService
+          .getFinancialStatus(this.userId, this.currentYear, this.currentMonth)
+          .subscribe((res) => {
+            this.estadoFinanciero = res.estado;
+            this.estadoFinancieroColor = res.color;
+            this.cuadreDescuadre = res.cuadre;
+
+            // (Opcional) si querés usar más datos del estado:
+            // this.incomes = res.incomes;
+            // this.expenses = res.expenses;
+            // this.wallet = res.wallet;
+            // this.loans = res.loans;
+          });
       }
     });
   }
-
+  
   ngOnDestroy(): void {
     this.dateSubscription?.unsubscribe();
   }
@@ -67,32 +105,43 @@ export default class DebtsComponent implements OnInit, OnDestroy {
   // Obtener deudas
   // ======================
   loadDebts() {
-    this.debtService.getDebts(this.userId, this.currentYear, this.currentMonth).subscribe({
-      next: (data) => {
-        this.debts = Object.entries(data).map(([id, d]) => ({ id, ...d }));
+    this.debtService
+      .getDebts(this.userId, this.currentYear, this.currentMonth)
+      .subscribe({
+        next: (data) => {
+          this.debts = Object.entries(data).map(([id, d]) => ({ id, ...d }));
 
-        const today = new Date().toISOString().split('T')[0];
+          const today = new Date().toISOString().split('T')[0];
 
-        for (const debt of this.debts) {
-          if (debt.estado === 'Pendiente') {
-            // ✅ Deuda vence hoy
-            if (debt.fecha_pago === today) {
-              this.authService.addNotification(this.userId, `Tienes una deuda que vence hoy con ${debt.acreedor}`).subscribe();
-            }
+          for (const debt of this.debts) {
+            if (debt.estado === 'Pendiente') {
+              // ✅ Deuda vence hoy
+              if (debt.fecha_pago === today) {
+                this.authService
+                  .addNotification(
+                    this.userId,
+                    `Tienes una deuda que vence hoy con ${debt.acreedor}`
+                  )
+                  .subscribe();
+              }
 
-            // ✅ Deuda vencida
-            if (new Date(debt.fecha_pago) < new Date(today)) {
-              this.authService.addNotification(this.userId, `Tienes una deuda vencida con ${debt.acreedor}`).subscribe();
+              // ✅ Deuda vencida
+              if (new Date(debt.fecha_pago) < new Date(today)) {
+                this.authService
+                  .addNotification(
+                    this.userId,
+                    `Tienes una deuda vencida con ${debt.acreedor}`
+                  )
+                  .subscribe();
+              }
             }
           }
-        }
-      },
-      error: (err) => {
-        console.error('Error al cargar deudas:', err);
-      }
-    });
+        },
+        error: (err) => {
+          console.error('Error al cargar deudas:', err);
+        },
+      });
   }
-
 
   // ======================
   // Modal: Agregar Deuda
@@ -107,15 +156,70 @@ export default class DebtsComponent implements OnInit, OnDestroy {
   }
 
   addDebt() {
-    if (!this.newDebt.acreedor || !this.newDebt.fecha_deuda || !this.newDebt.fecha_pago || this.newDebt.valor <= 0) {
+    if (
+      !this.newDebt.acreedor ||
+      !this.newDebt.fecha_deuda ||
+      !this.newDebt.fecha_pago ||
+      this.newDebt.valor <= 0
+    ) {
       alert('Por favor completa todos los campos.');
       return;
     }
 
-    this.debtService.addDebt(this.userId, this.currentYear, this.currentMonth, { ...this.newDebt }).subscribe({
+    this.debtService
+      .addDebt(this.userId, this.currentYear, this.currentMonth, {
+        ...this.newDebt,
+      })
+      .subscribe({
+        next: () => {
+          this.loadDebts();
+          this.closeModal();
+        },
+      });
+  }
+
+  // ======================
+  // Modal: Agregar valor en Deuda
+  // ======================
+  openAddModal(id: string) {
+    this.selectedDebtId = id;
+    this.isAddValueModalOpen = true;
+  }
+
+  closeAddValueModal() {
+    this.isAddValueModalOpen = false;
+    this.newValue = 0;
+  }
+
+  saveNewValue() {
+    if (!this.selectedDebtId) return;
+
+    const debt = this.debts.find(d => d.id === this.selectedDebtId);
+    if (!debt) return;
+
+    const updatedValue = debt.valor + this.newValue;
+
+    const updatedDebt: Debt = {
+      acreedor: debt.acreedor,
+      fecha_deuda: debt.fecha_deuda,
+      fecha_pago: debt.fecha_pago,
+      valor: updatedValue,
+      estado: debt.estado,
+    };
+
+    this.debtService.updateDebt(
+      this.userId,
+      this.currentYear,
+      this.currentMonth,
+      debt.id,
+      updatedDebt
+    ).subscribe({
       next: () => {
         this.loadDebts();
-        this.closeModal();
+        this.closeAddValueModal();
+      },
+      error: (err) => {
+        console.error('Error al actualizar valor de deuda:', err);
       }
     });
   }
@@ -124,7 +228,7 @@ export default class DebtsComponent implements OnInit, OnDestroy {
   // Modal: Editar Deuda
   // ======================
   openEditModal(id: string) {
-    const original = this.debts.find(d => d.id === id);
+    const original = this.debts.find((d) => d.id === id);
     if (!original) return;
 
     this.editedDebt = new Debt(
@@ -147,15 +251,23 @@ export default class DebtsComponent implements OnInit, OnDestroy {
   saveEditedDebt() {
     if (!this.editedId) return;
 
-    this.debtService.updateDebt(this.userId, this.currentYear, this.currentMonth, this.editedId, this.editedDebt).subscribe({
-      next: () => {
-        this.loadDebts();
-        this.closeEditModal();
-      },
-      error: (err) => {
-        console.error('Error al actualizar deuda:', err);
-      }
-    });
+    this.debtService
+      .updateDebt(
+        this.userId,
+        this.currentYear,
+        this.currentMonth,
+        this.editedId,
+        this.editedDebt
+      )
+      .subscribe({
+        next: () => {
+          this.loadDebts();
+          this.closeEditModal();
+        },
+        error: (err) => {
+          console.error('Error al actualizar deuda:', err);
+        },
+      });
   }
 
   // ======================
@@ -165,21 +277,56 @@ export default class DebtsComponent implements OnInit, OnDestroy {
     const confirmDelete = confirm('¿Estás seguro de eliminar esta deuda?');
     if (!confirmDelete) return;
 
-    this.debtService.deleteDebt(this.userId, this.currentYear, this.currentMonth, id).subscribe({
-      next: () => {
-        this.loadDebts();
-      },
-      error: (err) => {
-        console.error('Error al eliminar deuda:', err);
-      }
-    });
+    this.debtService
+      .deleteDebt(this.userId, this.currentYear, this.currentMonth, id)
+      .subscribe({
+        next: () => {
+          this.loadDebts();
+        },
+        error: (err) => {
+          console.error('Error al eliminar deuda:', err);
+        },
+      });
+  }
+
+  openDeleteModal(id: string) {
+    this.isDeleteModalOpen = true;
+    this.debtToDeleteId = id;
+  }
+
+  confirmDeleteDebt() {
+    if (!this.debtToDeleteId) return;
+
+    this.debtService
+      .deleteDebt(
+        this.userId,
+        this.currentYear,
+        this.currentMonth,
+        this.debtToDeleteId
+      )
+      .subscribe({
+        next: () => {
+          this.loadDebts();
+          this.closeDeleteModal();
+        },
+        error: (err) => {
+          console.error('Error al eliminar deuda:', err);
+        },
+      });
+  }
+
+  closeDeleteModal() {
+    this.isDeleteModalOpen = false;
+    this.debtToDeleteId = null;
   }
 
   // ======================
   // Estado
   // ======================
   togglePaymentStatus(debt: DebtWithId) {
-    const updatedStatus = (debt.estado === 'Pendiente' ? 'Pagado' : 'Pendiente') as 'Pendiente' | 'Pagado';
+    const updatedStatus = (
+      debt.estado === 'Pendiente' ? 'Pagado' : 'Pendiente'
+    ) as 'Pendiente' | 'Pagado';
 
     const updatedDebt: Debt = {
       acreedor: debt.acreedor,
@@ -189,22 +336,34 @@ export default class DebtsComponent implements OnInit, OnDestroy {
       estado: updatedStatus,
     };
 
-    this.debtService.updateDebt(this.userId, this.currentYear, this.currentMonth, debt.id, updatedDebt).subscribe({
-      next: () => {
-        this.loadDebts();
+    this.debtService
+      .updateDebt(
+        this.userId,
+        this.currentYear,
+        this.currentMonth,
+        debt.id,
+        updatedDebt
+      )
+      .subscribe({
+        next: () => {
+          this.loadDebts();
 
-        // ✅ Notificar si la deuda fue pagada
-        if (updatedStatus === 'Pagado') {
-          this.authService.addNotification(this.userId, `Pagaste tu deuda con ${debt.acreedor} correctamente`).subscribe();
-        }
-      },
+          // ✅ Notificar si la deuda fue pagada
+          if (updatedStatus === 'Pagado') {
+            this.authService
+              .addNotification(
+                this.userId,
+                `Pagaste tu deuda con ${debt.acreedor} correctamente`
+              )
+              .subscribe();
+          }
+        },
 
-      error: (err) => {
-        console.error('Error al cambiar estado de la deuda:', err);
-      }
-    });
+        error: (err) => {
+          console.error('Error al cambiar estado de la deuda:', err);
+        },
+      });
   }
-
 
   // ======================
   // Utilidades
@@ -219,19 +378,61 @@ export default class DebtsComponent implements OnInit, OnDestroy {
     return this.decimalPipe.transform(value, '1.0-0') || '';
   }
 
-  onValueInput(event: Event, type: 'new' | 'edit') {
+  onValueInput(event: Event, type: 'new' | 'edit' | 'add') {
     const input = event.target as HTMLInputElement;
-    const raw = input.value.replace(/[.,]/g, '');
+    const raw = input.value.replace(/[^\d-]/g, '');
     const value = Number(raw) || null;
 
     if (type === 'new') {
       this.newDebt.valor = value ?? 0;
-    } else {
+    } else if (type === 'edit') {
       this.editedDebt.valor = value ?? 0;
+    } else if (type === 'add') {
+      this.newValue = value ?? 0;
     }
 
     input.value = this.formatCurrency(value ?? 0);
   }
 
+  applyValue(action: 'add' | 'subtract') {
+    if (!this.selectedDebtId) return;
+
+    const debt = this.debts.find(d => d.id === this.selectedDebtId);
+    if (!debt) return;
+
+    let finalValue = this.newValue;
+
+    if (action === 'subtract') {
+      finalValue = -Math.abs(this.newValue); // asegúrate que sea negativo
+    } else {
+      finalValue = Math.abs(this.newValue); // asegúrate que sea positivo
+    }
+
+    const updatedValue = debt.valor + finalValue;
+
+    const updatedDebt: Debt = {
+      acreedor: debt.acreedor,
+      fecha_deuda: debt.fecha_deuda,
+      fecha_pago: debt.fecha_pago,
+      valor: updatedValue,
+      estado: debt.estado,
+    };
+
+    this.debtService.updateDebt(
+      this.userId,
+      this.currentYear,
+      this.currentMonth,
+      debt.id,
+      updatedDebt
+    ).subscribe({
+      next: () => {
+        this.loadDebts();
+        this.closeAddValueModal();
+      },
+      error: (err) => {
+        console.error('Error al actualizar deuda:', err);
+      }
+    });
+  }
 
 }
