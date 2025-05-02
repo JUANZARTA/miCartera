@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError, forkJoin, of } from 'rxjs';
 import { catchError, tap, map, switchMap } from 'rxjs/operators';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
 
 export interface Notificacion {
   mensaje: string;
@@ -147,6 +149,11 @@ export class AuthService {
     );
   }
 
+  // Método para iniciar sesión con Google
+  loginWithGoogle(): void {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithRedirect(provider);
+  }
   // método: Borrar notificaciones con más de 7 días de antigüedad
   cleanOldNotifications(uid: string): Observable<any> {
     return this.getUserNotifications(uid).pipe(

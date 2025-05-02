@@ -20,6 +20,7 @@ export default class RegisterComponent implements OnInit {
   errorMessage = '';
   showModal = false;
   showSuccessModal = false;
+  showPassword: boolean = false;
 
   constructor() {
     this.registerForm = this.fb.group({
@@ -32,8 +33,9 @@ export default class RegisterComponent implements OnInit {
 
   ngOnInit(): void {}
 
-  isInvalid(field: string): boolean {
-    return this.registerForm.controls[field].invalid && this.registerForm.controls[field].touched;
+  isInvalid(controlName: string): boolean {
+    const control = this.registerForm.get(controlName);
+    return !!(control && control.invalid && (control.dirty || control.touched));
   }
 
   private passwordsMatch(formGroup: FormGroup) {
@@ -85,5 +87,9 @@ export default class RegisterComponent implements OnInit {
       default:
         return 'Ha ocurrido un error inesperado.';
     }
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
   }
 }

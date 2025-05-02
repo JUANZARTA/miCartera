@@ -25,18 +25,22 @@
       </div>
 
       <!-- Contraseña -->
-      <div class="mb-6">
+      <div class="mb-6 relative">
         <label for="password" class="block text-gray-600 text-sm font-semibold">Contraseña</label>
-        <input type="password" id="password" formControlName="password"
-          class="w-full px-4 py-3 mt-2 border rounded-lg focus:ring focus:ring-green-300"
+        <input [type]="showPassword ? 'text' : 'password'" id="password" formControlName="password"
+          class="w-full px-4 py-3 mt-2 border rounded-lg focus:ring focus:ring-green-300 pr-10"
           [ngClass]="{'border-red-500': isInvalid('password')}">
+        <button type="button" (click)="togglePasswordVisibility()"
+                class="absolute right-3 top-10 text-gray-500 focus:outline-none">
+          {{ showPassword ? '🙈' : '👁️' }}
+        </button>
         <p *ngIf="isInvalid('password')" class="text-red-500 text-xs mt-1">Debe tener al menos 6 caracteres.</p>
       </div>
 
       <!-- Confirmar Contraseña -->
       <div class="mb-6">
         <label for="confirmPassword" class="block text-gray-600 text-sm font-semibold">Confirmar Contraseña</label>
-        <input type="password" id="confirmPassword" formControlName="confirmPassword"
+        <input [type]="showPassword ? 'text' : 'password'" id="confirmPassword" formControlName="confirmPassword"
           class="w-full px-4 py-3 mt-2 border rounded-lg focus:ring focus:ring-green-300"
           [ngClass]="{'border-red-500': isInvalid('confirmPassword') || registerForm.hasError('mismatch')}">
         <p *ngIf="registerForm.hasError('mismatch')" class="text-red-500 text-xs mt-1">Las contraseñas no coinciden.</p>
