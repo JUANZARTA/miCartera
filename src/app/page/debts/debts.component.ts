@@ -78,25 +78,16 @@ export default class DebtsComponent implements OnInit, OnDestroy {
         this.currentYear = date.year;
         this.currentMonth = date.month;
         this.loadDebts();
-
-        // ✅ Llamada correcta al servicio financiero (sin pasar `this`)
-        this.finanzasService
-          .getFinancialStatus(this.userId, this.currentYear, this.currentMonth)
-          .subscribe((res) => {
-            this.estadoFinanciero = res.estado;
-            this.estadoFinancieroColor = res.color;
-            this.cuadreDescuadre = res.cuadre;
-
-            // (Opcional) si querés usar más datos del estado:
-            // this.incomes = res.incomes;
-            // this.expenses = res.expenses;
-            // this.wallet = res.wallet;
-            // this.loans = res.loans;
-          });
       }
     });
+    this.finanzasService.mostrarEstadoFinanciero(
+      this,
+      this.userId,
+      this.currentYear,
+      this.currentMonth
+    );
   }
-  
+
   ngOnDestroy(): void {
     this.dateSubscription?.unsubscribe();
   }

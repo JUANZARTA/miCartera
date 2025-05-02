@@ -2,15 +2,30 @@
   <div
     class="relative flex flex-col bg-white rounded-xl shadow-lg overflow-hidden xl:col-span-2 border border-gray-200">
 
+    <!-- Estado financiero -->
+    <div class="px-6 py-4 border-b flex center-end">
+      <span [ngClass]="{
+      'bg-red-600': estadoFinancieroColor === 'rojo',
+      'bg-blue-600': estadoFinancieroColor === 'azul',
+      'bg-green-600': estadoFinancieroColor === 'verde'
+    }" class="text-white text-sm font-semibold px-4 py-2 rounded-full shadow-md">
+        {{ estadoFinanciero }}
+      </span>
+    </div>
+
     <!-- Encabezado -->
     <div
-      class="flex items-center justify-between p-6 bg-gradient-to-r from-blue-700 to-teal-500 text-white rounded-t-xl shadow-md">
+      class="flex items-center justify-between p-6 bg-gradient-to-r from-sky-800 to-sky-800  text-white rounded-t-xl shadow-md">
       <div>
         <h6 class="text-xl font-bold tracking-wide">Mi Cartera</h6>
         <p class="text-sm flex items-center gap-2 opacity-90">
           <strong>Estado Actual</strong>
         </p>
       </div>
+      <button (click)="openModal()"
+        class="bg-white text-blue-700 font-semibold px-4 py-2 rounded-md shadow-md hover:bg-blue-100 transition">
+        Agregar Cuenta +
+      </button>
     </div>
 
     <!-- Tabla -->
@@ -30,9 +45,17 @@
               ${{ formatCurrency(account.valor) }}
             </td>
             <td class="py-4 px-6 text-center">
-              <button (click)="openEditModal(account.id)" class="text-blue-600 mr-2">✏️</button>
-              <button (click)="deleteAccount(account.id)" class="text-red-600">🗑️</button>
+              <button (click)="openAddModal(account.id)" class="text-lime-600 mr-2">
+                <span class="material-icons">add</span>
+              </button>
+              <button (click)="openEditModal(account.id)" class="text-sky-700 mr-2">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button (click)="openDeleteModal(account.id)" class="text-orange-600">
+                <mat-icon>delete</mat-icon>
+              </button>
             </td>
+
           </tr>
 
           <!-- Total Final -->
@@ -47,54 +70,83 @@
       </table>
     </div>
 
-    <!-- Botón para agregar cuenta -->
-    <div class="flex justify-end p-4">
-      <button (click)="openModal()"
-        class="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-teal-500 transition">
-        Agregar Cuenta +
+    <!-- Modal para agregar cuenta -->
+<div *ngIf="isModalOpen" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+    <h2 class="text-xl font-bold mb-4">Agregar Nueva Cuenta</h2>
+    <p class="text-gray-600 mb-4 text-sm">Introduce los detalles de la nueva cuenta.</p>
+
+    <label class="block mb-2">Dinero en:</label>
+    <input type="text" [(ngModel)]="newAccount.tipo" placeholder="Ej: Cuenta de ahorros"
+      class="w-full p-2 border rounded-md mb-3" />
+
+    <label class="block mb-2">Valor:</label>
+    <input type="text" [value]="formatCurrency(newAccount.valor)" (input)="onValueInput($event, 'new')"
+      placeholder="Ej: 1.000.000" class="w-full p-2 border rounded-md mb-3" />
+
+    <div class="flex justify-end gap-2">
+      <button (click)="closeModal()" class="px-4 py-2 border rounded-md bg-white-700 hover:bg-slate-200">Cancelar</button>
+      <button (click)="addAccount()" class="px-4 py-2 bg-sky-700 text-white rounded-md hover:bg-slate-700">Agregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para agregar valor a cuenta -->
+<div *ngIf="isAddValueModalOpen" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-80">
+    <h2 class="text-xl font-bold mb-2">Agregar o Restar Valor</h2>
+    <p class="text-gray-600 mb-4 text-sm">Introduce un valor para adicionar o restar a esta cuenta.</p>
+
+    <label class="block mb-2 font-semibold">Valor:</label>
+    <input
+      type="text"
+      [value]="formatCurrency(newValue)"
+      (input)="onValueInput($event, 'add')"
+      placeholder="Ej: 5000"
+      class="w-full p-2 border rounded-md mb-4" />
+
+    <div class="flex justify-end gap-2">
+      <button (click)="closeAddValueModal()" class="px-4 py-2 border rounded-md bg-white-700 hover:bg-slate-200">Cancelar</button>
+      <button (click)="applyValue('subtract')" class="px-4 py-2 bg-sky-700 text-white rounded-md hover:bg-slate-700">Restar</button>
+      <button (click)="applyValue('add')" class="px-4 py-2 bg-teal-700 text-white rounded-md hover:bg-emerald-800">Sumar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para editar cuenta -->
+<div *ngIf="isEditModalOpen" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+    <h2 class="text-xl font-bold mb-4">Editar Cuenta</h2>
+    <p class="text-gray-600 mb-4 text-sm">Edita los detalles de la cuenta.</p>
+
+    <label class="block mb-2">Dinero en:</label>
+    <input type="text" [(ngModel)]="editedAccount.tipo" placeholder="Ej: Efectivo"
+      class="w-full p-2 border rounded-md mb-3" />
+
+    <label class="block mb-2">Valor:</label>
+    <input type="text" [value]="formatCurrency(editedAccount.valor)" (input)="onEditValueInput($event)"
+      placeholder="Ej: 750.000" class="w-full p-2 border rounded-md mb-3" />
+
+    <div class="flex justify-end gap-2">
+      <button (click)="closeEditModal()" class="px-4 py-2 border rounded-md bg-white-700 hover:bg-slate-200">Cancelar</button>
+      <button (click)="saveEditedAccount()" class="px-4 py-2 bg-sky-700 text-white rounded-md hover:bg-slate-700">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para eliminar cuenta -->
+<div *ngIf="isDeleteModalOpen" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-80 text-center">
+    <span class="material-icons text-red-600 mx-auto mb-4" style="font-size: 48px;">
+      report_problem
+    </span>
+    <h2 class="text-xl font-bold mt-4 mb-2">¿Eliminar Cuenta?</h2>
+    <p class="mb-6 text-gray-700">¿Estás seguro de que deseas eliminar esta cuenta? Esta acción no se puede deshacer.</p>
+    <div class="flex justify-center gap-2">
+      <button (click)="closeDeleteModal()" class="px-4 py-2 border rounded-md bg-white-700 hover:bg-orange-200">Cancelar</button>
+      <button (click)="confirmDeleteAccount()" class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-red-600">
+        Eliminar
       </button>
     </div>
-
-    <!-- Modal para agregar cuenta -->
-    <div *ngIf="isModalOpen" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-      <div class="bg-white p-6 rounded-lg shadow-lg w-96">
-        <h2 class="text-xl font-bold mb-4">Agregar Nueva Cuenta</h2>
-
-        <label class="block mb-2">Dinero en:</label>
-        <input type="text" [(ngModel)]="newAccount.tipo" placeholder="Ejm: Cuenta de ahorros"
-          class="w-full p-2 border rounded-md mb-3" />
-
-        <label class="block mb-2">Valor:</label>
-        <input type="text" [value]="formatCurrency(newAccount.valor)" (input)="onValueInput($event, 'new')"
-          placeholder="Ejm: 1.000.000" class="w-full p-2 border rounded-md mb-3" />
-
-        <div class="flex justify-end gap-2">
-          <button (click)="closeModal()" class="px-4 py-2 border rounded-md">Cancelar</button>
-          <button (click)="addAccount()" class="px-4 py-2 bg-green-500 text-white rounded-md">Agregar</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal para editar cuenta -->
-    <div *ngIf="isEditModalOpen" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-      <div class="bg-white p-6 rounded-lg shadow-lg w-96">
-        <h2 class="text-xl font-bold mb-4">Editar Cuenta</h2>
-
-        <label class="block mb-2">Dinero en:</label>
-        <input type="text" [(ngModel)]="editedAccount.tipo" placeholder="Ejm: Efectivo"
-          class="w-full p-2 border rounded-md mb-3" />
-
-        <label class="block mb-2">Valor:</label>
-        <input type="text" [value]="formatCurrency(editedAccount.valor)" (input)="onValueInput($event, 'edit')"
-          placeholder="Ejm: 750.000" class="w-full p-2 border rounded-md mb-3" />
-
-        <div class="flex justify-end gap-2">
-          <button (click)="closeEditModal()" class="px-4 py-2 border rounded-md">Cancelar</button>
-          <button (click)="saveEditedAccount()" class="px-4 py-2 bg-green-500 text-white rounded-md">Guardar</button>
-        </div>
-      </div>
-    </div>
-
-
   </div>
 </div>

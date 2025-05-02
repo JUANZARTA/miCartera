@@ -3,9 +3,12 @@ import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ExpenseService } from '../../services/expense.service';
 import { CategoriaGasto, Expense } from '../../models/expense.model';
-import { DateService } from '../../services/date.service'; // ✅ Nuevo
-import { Subscription } from 'rxjs'; // ✅ Nuevo
-import { AuthService } from '../../services/auth.service'; // ✅ nuevo
+import { DateService } from '../../services/date.service';
+import { Subscription } from 'rxjs';
+import { AuthService } from '../../services/auth.service';
+import { FinanzasService } from '../../services/finanzas.service';
+import { MatIconModule } from '@angular/material/icon';
+
 
 export interface ExpenseWithId extends Expense {
   id: string;
@@ -14,31 +17,63 @@ export interface ExpenseWithId extends Expense {
 @Component({
   selector: 'app-expense',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule,MatIconModule],
   templateUrl: './expense.component.html',
   styleUrls: ['./expense.component.css'],
   providers: [DecimalPipe],
+  
 })
 export default class ExpenseComponent implements OnInit, OnDestroy {
   private expenseService = inject(ExpenseService);
   private decimalPipe = inject(DecimalPipe);
   private dateService = inject(DateService); // ✅ Nuevo
   private authService = inject(AuthService); // ✅ nuevo
+  private finanzasService = inject(FinanzasService);
 
+  // Propiedades
+  incomes: any[] = [];
   expenses: ExpenseWithId[] = [];
+  wallet: any[] = [];
+  loans: any[] = [];
+
+  // Estado financiero
+  estadoFinanciero = '';
+  estadoFinancieroColor: 'verde' | 'rojo' | 'azul' = 'verde';
+  cuadreDescuadre = 0;
 
   // Modales
   isModalOpen = false;
   isEditModalOpen = false;
 
+    // Variables para modales nuevos
+  isAddValueModalOpen: boolean = false;
+  isDeleteModalOpen: boolean = false;
+  selectedExpenseId: string | null = null;
+  expenseToDeleteId: string | null = null;
+  newValue: number = 0;
+
   categorias: string[] = Object.values(CategoriaGasto);
 
-  newExpense: Expense = new Expense('', CategoriaGasto.Variable, null as any, null as any);
-  editedExpense: Expense = new Expense('', CategoriaGasto.Variable, null as any, null as any);
+  // Gasto nuevo (modal)
+  newExpense: Expense = new Expense(
+    '',
+    CategoriaGasto.Variable,
+    null as any,
+    null as any
+  );
+
+  // Gasto en edición (modal)
+  editedExpense: Expense = new Expense(
+    '',
+    CategoriaGasto.Variable,
+    null as any,
+    null as any
+  );
+
   editedId: string | null = null;
 
   readonly userId = JSON.parse(localStorage.getItem('user') || '{}').localId;
-
+  
   currentYear: string = '';
   currentMonth: string = '';
 
@@ -47,123 +82,212 @@ export default class ExpenseComponent implements OnInit, OnDestroy {
   // Variables para el gráfico
   ngOnInit() {
     // ✅ Suscripción reactiva al cambio de año/mes
-    this.dateSubscription = this.dateService.selectedDate$.subscribe(date => {
+    this.dateSubscription = this.dateService.selectedDate$.subscribe((date) => {
       if (date.year && date.month) {
         this.currentYear = date.year;
         this.currentMonth = date.month;
         this.loadExpenses();
       }
     });
+    this.finanzasService.mostrarEstadoFinanciero(
+      this,
+      this.userId,
+      this.currentYear,
+      this.currentMonth
+    );
   }
 
+  // Método para limpiar suscripciones al destruir el componente
   ngOnDestroy(): void {
     this.dateSubscription?.unsubscribe();
   }
 
   // Método para cargar los gastos
   loadExpenses() {
-    this.expenseService.getExpenses(this.userId, this.currentYear, this.currentMonth).subscribe({
-      next: (data) => {
-        this.expenses = Object.entries(data).map(([id, exp]) => ({ id, ...exp }));
-      },
-      error: (err) => {
-        console.error('❌ Error al cargar gastos:', err);
-      },
-    });
+    this.expenseService
+      .getExpenses(this.userId, this.currentYear, this.currentMonth)
+      .subscribe({
+        next: (data) => {
+          this.expenses = Object.entries(data).map(([id, exp]) => ({
+            id,
+            ...exp,
+          }));
+        },
+        error: (err) => {
+          console.error('❌ Error al cargar gastos:', err);
+        },
+      });
+    this.finanzasService.mostrarEstadoFinanciero(
+      this,
+      this.userId,
+      this.currentYear,
+      this.currentMonth
+    );
   }
 
-  // Métodos para abrir y cerrar modales
-  openModal() {
-    this.isModalOpen = true;
+// ======================
+// Modal: Agregar Gasto
+// ======================
+openModal() {
+  this.isModalOpen = true;
+}
+
+closeModal() {
+  this.isModalOpen = false;
+  this.newExpense = new Expense('', CategoriaGasto.Variable, 0, 0);
+}
+
+addExpense() {
+  if (!this.newExpense.descripcion || !this.newExpense.categoria) {
+    alert('Por favor completa todos los campos.');
+    return;
   }
 
-  // Método para cerrar el modal
-  closeModal() {
-    this.isModalOpen = false;
-    this.newExpense = new Expense('', CategoriaGasto.Variable, 0, 0);
-  }
-
-  // Método para agregar un nuevo gasto
-  addExpense() {
-    if (!this.newExpense.descripcion || !this.newExpense.categoria) {
-      alert('Por favor completa todos los campos.');
-      return;
-    }
-
-    this.expenseService.addExpense(this.userId, this.currentYear, this.currentMonth, this.newExpense).subscribe({
+  this.expenseService
+    .addExpense(this.userId, this.currentYear, this.currentMonth, this.newExpense)
+    .subscribe({
       next: () => {
         this.loadExpenses();
         this.closeModal();
-
-        // ✅ Gasto alto
-        if (this.newExpense.valor > 100000) {
-          this.authService.addNotification(this.userId, `Gasto alto registrado: $${this.newExpense.valor}`).subscribe();
-        }
-
-        // ✅ Gasto supera estimación individual
-        if (this.newExpense.estimacion && this.newExpense.valor > this.newExpense.estimacion) {
-          this.authService.addNotification(this.userId, `Superaste la estimación para ${this.newExpense.categoria}`).subscribe();
-        }
-
-        // ✅ Gastos totales superan el 80% del total estimado
-        const totalGastos = this.getTotalExpenses() + this.newExpense.valor;
-        const totalEstimado = this.getTotalEstimations() + this.newExpense.estimacion;
-
-        const porcentaje = (totalGastos / totalEstimado) * 100;
-        if (totalEstimado > 0 && porcentaje >= 80) {
-          this.authService.addNotification(this.userId, `Ya has gastado el ${porcentaje.toFixed(0)}% de tu presupuesto mensual`).subscribe();
-        }
+      },
+      error: (err) => {
+        console.error('Error al agregar gasto:', err);
       }
     });
+}
+
+// ======================
+// Modal: Agregar Valor en Gasto
+// ======================
+openAddModal(id: string) {
+  this.selectedExpenseId = id;
+  this.isAddValueModalOpen = true;
+}
+
+closeAddValueModal() {
+  this.isAddValueModalOpen = false;
+  this.newValue = 0;
+}
+
+applyValue(action: 'add' | 'subtract') {
+  if (!this.selectedExpenseId) return;
+
+  const expense = this.expenses.find(e => e.id === this.selectedExpenseId);
+  if (!expense) return;
+
+  let finalValue = this.newValue;
+
+  if (action === 'subtract') {
+    finalValue = -Math.abs(this.newValue); // asegurar negativo
+  } else {
+    finalValue = Math.abs(this.newValue); // asegurar positivo
   }
 
+  const updatedValue = expense.valor + finalValue;
 
-  // Métodos para editar y eliminar gastos
-  openEditModal(id: string) {
-    const original = this.expenses.find(e => e.id === id);
-    if (!original) return;
+  const updatedExpense: Expense = {
+    descripcion: expense.descripcion,
+    categoria: expense.categoria,
+    valor: updatedValue,
+    estimacion: expense.estimacion
+  };
 
-    this.editedExpense = new Expense(
-      original.descripcion,
-      original.categoria,
-      original.valor,
-      original.estimacion
-    );
-    this.editedId = id;
-    this.isEditModalOpen = true;
-  }
+  this.expenseService.updateExpense(
+    this.userId,
+    this.currentYear,
+    this.currentMonth,
+    expense.id,
+    updatedExpense
+  ).subscribe({
+    next: () => {
+      this.loadExpenses();
+      this.closeAddValueModal();
+    },
+    error: (err) => {
+      console.error('Error al actualizar gasto:', err);
+    }
+  });
+}
 
-  // Método para cerrar el modal de edición
-  closeEditModal() {
-    this.isEditModalOpen = false;
-    this.editedExpense = new Expense('', CategoriaGasto.Variable, 0, 0);
-    this.editedId = null;
-  }
+// ======================
+// Modal: Editar Gasto
+// ======================
+openEditModal(id: string) {
+  const original = this.expenses.find((e) => e.id === id);
+  if (!original) return;
 
-  // Método para guardar los cambios de edición
-  saveEditedExpense() {
-    if (!this.editedId) return;
+  this.editedExpense = new Expense(
+    original.descripcion,
+    original.categoria,
+    original.valor,
+    original.estimacion
+  );
+  this.editedId = id;
+  this.isEditModalOpen = true;
+}
 
-    this.expenseService
-      .updateExpense(this.userId, this.currentYear, this.currentMonth, this.editedId, this.editedExpense)
-      .subscribe({
-        next: () => {
-          this.loadExpenses();
-          this.closeEditModal();
-        },
-      });
-  }
+closeEditModal() {
+  this.isEditModalOpen = false;
+  this.editedExpense = new Expense('', CategoriaGasto.Variable, 0, 0);
+  this.editedId = null;
+}
 
-  // Método para eliminar un gasto
-  deleteExpense(id: string) {
-    if (!confirm('¿Estás seguro de eliminar este gasto?')) return;
+saveEditedExpense() {
+  if (!this.editedId) return;
 
-    this.expenseService.deleteExpense(this.userId, this.currentYear, this.currentMonth, id).subscribe({
+  this.expenseService
+    .updateExpense(
+      this.userId,
+      this.currentYear,
+      this.currentMonth,
+      this.editedId,
+      this.editedExpense
+    )
+    .subscribe({
       next: () => {
         this.loadExpenses();
+        this.closeEditModal();
       },
+      error: (err) => {
+        console.error('Error al editar gasto:', err);
+      }
     });
-  }
+}
+
+// ======================
+// Modal: Eliminar Gasto
+// ======================
+openDeleteModal(id: string) {
+  this.isDeleteModalOpen = true;
+  this.expenseToDeleteId = id;
+}
+
+closeDeleteModal() {
+  this.isDeleteModalOpen = false;
+  this.expenseToDeleteId = null;
+}
+
+confirmDeleteExpense() {
+  if (!this.expenseToDeleteId) return;
+
+  this.expenseService
+    .deleteExpense(
+      this.userId,
+      this.currentYear,
+      this.currentMonth,
+      this.expenseToDeleteId
+    )
+    .subscribe({
+      next: () => {
+        this.loadExpenses();
+        this.closeDeleteModal();
+      },
+      error: (err) => {
+        console.error('Error al eliminar gasto:', err);
+      }
+    });
+}
+
 
   // Método para eliminar todos los gastos
   getTotalExpenses(): number {
@@ -197,7 +321,10 @@ export default class ExpenseComponent implements OnInit, OnDestroy {
       map.get(cat)!.push(exp);
     }
 
-    return Array.from(map.entries()).map(([categoria, items]) => ({ categoria, items }));
+    return Array.from(map.entries()).map(([categoria, items]) => ({
+      categoria,
+      items,
+    }));
   }
 
   // Método para calcular el total por categoría
@@ -212,20 +339,32 @@ export default class ExpenseComponent implements OnInit, OnDestroy {
 
   // Método para calcular el total de estimaciones
   getTotalEstimations() {
-    return this.expenses.reduce((acc, item) => acc + (Number(item.estimacion) || 0), 0);
+    return this.expenses.reduce(
+      (acc, item) => acc + (Number(item.estimacion) || 0),
+      0
+    );
   }
 
   // Procesar entrada y convertir a número limpio
-  onValueInput(event: Event, field: 'valor' | 'estimacion') {
-    const input = (event.target as HTMLInputElement);
-    const rawValue = input.value.replace(/[.,]/g, '');
+  onValueInput(event: Event, field: 'valor' | 'estimacion' | 'add') {
+    const input = event.target as HTMLInputElement;
+    const rawValue = input.value.replace(/[^\d-]/g, '');
     const numericValue = Number(rawValue) || 0;
-    this.newExpense[field] = numericValue;
+  
+    if (field === 'valor') {
+      this.newExpense.valor = numericValue;
+    } else if (field === 'estimacion') {
+      this.newExpense.estimacion = numericValue;
+    } else if (field === 'add') {
+      this.newValue = numericValue;
+    }
+  
     input.value = this.formatCurrency(numericValue);
   }
+  
 
   onEditValueInput(event: Event, field: 'valor' | 'estimacion') {
-    const input = (event.target as HTMLInputElement);
+    const input = event.target as HTMLInputElement;
     const rawValue = input.value.replace(/[.,]/g, '');
     const numericValue = Number(rawValue) || 0;
     this.editedExpense[field] = numericValue;

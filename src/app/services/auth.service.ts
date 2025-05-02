@@ -12,7 +12,7 @@ export interface Notificacion {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private apiKey = 'AIzaSyBzluPST056-3rTmei5t38M6GaF9CNCo2Q';
@@ -71,27 +71,33 @@ export class AuthService {
   }
 
   // método: Guardar el perfil del usuario en la base de datos
-  saveUserProfile(userId: string, name: string, correo: string): Observable<any> {
+  saveUserProfile(
+    userId: string,
+    name: string,
+    correo: string
+  ): Observable<any> {
     const url = `https://micartera-acd5b-default-rtdb.firebaseio.com/${userId}.json`;
 
-    return this.http.put(url, {
-      nombre: name,
-      correo: correo,
-      notificaciones: {
-        "-notif1": {
-          mensaje: "Bienvenido a MiCartera",
-          leido: false,
-          fecha: new Date().toLocaleString()
-        }
-      }
-    }).pipe(
-      tap(() => {
-        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-        storedUser.name = name;
-        localStorage.setItem('user', JSON.stringify(storedUser));
-      }),
-      catchError(() => throwError(() => 'Error al guardar perfil'))
-    );
+    return this.http
+      .put(url, {
+        nombre: name,
+        correo: correo,
+        notificaciones: {
+          '-notif1': {
+            mensaje: 'Bienvenido a MiCartera',
+            leido: false,
+            fecha: new Date().toLocaleString(),
+          },
+        },
+      })
+      .pipe(
+        tap(() => {
+          const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+          storedUser.name = name;
+          localStorage.setItem('user', JSON.stringify(storedUser));
+        }),
+        catchError(() => throwError(() => 'Error al guardar perfil'))
+      );
   }
 
   // método: Obtener todos los datos del usuario desde Firebase
@@ -123,8 +129,9 @@ export class AuthService {
 
         // Si hay más de 19 notificaciones, eliminar la más antigua
         if (total >= 20) {
-          const sorted = allNotifs.sort((a: any, b: any) =>
-            new Date(a[1].fecha).getTime() - new Date(b[1].fecha).getTime()
+          const sorted = allNotifs.sort(
+            (a: any, b: any) =>
+              new Date(a[1].fecha).getTime() - new Date(b[1].fecha).getTime()
           );
           const oldestKey = sorted[0][0];
 
@@ -134,7 +141,7 @@ export class AuthService {
               return this.http.post(notificacionesUrl, {
                 mensaje,
                 leido: false,
-                fecha: new Date().toLocaleString()
+                fecha: new Date().toLocaleString(),
               });
             })
           );
@@ -142,18 +149,13 @@ export class AuthService {
           return this.http.post(notificacionesUrl, {
             mensaje,
             leido: false,
-            fecha: new Date().toLocaleString()
+            fecha: new Date().toLocaleString(),
           });
         }
       })
     );
   }
 
-  // Método para iniciar sesión con Google
-  loginWithGoogle(): void {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    firebase.auth().signInWithRedirect(provider);
-  }
   // método: Borrar notificaciones con más de 7 días de antigüedad
   cleanOldNotifications(uid: string): Observable<any> {
     return this.getUserNotifications(uid).pipe(
@@ -164,7 +166,9 @@ export class AuthService {
         const deletions = Object.entries(data)
           .filter(([key, notif]: any) => {
             const fecha = new Date(notif.fecha);
-            const diffDays = Math.floor((now.getTime() - fecha.getTime()) / (1000 * 60 * 60 * 24));
+            const diffDays = Math.floor(
+              (now.getTime() - fecha.getTime()) / (1000 * 60 * 60 * 24)
+            );
             return diffDays >= 7;
           })
           .map(([key]) => {
@@ -176,4 +180,31 @@ export class AuthService {
       })
     );
   }
+
+  // Método para iniciar sesión con Google
+  loginWithGoogle(): void {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithRedirect(provider);
+  }
+
+  // Método para obtener el token de Firebase
+  startAutoLogout(): void {
+    let timer: any;
+
+    const resetTimer = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        this.logout();
+        window.location.href = '/auth/login'; // Redirigir al login
+      }, 2 * 60 * 1000); // 2 minutos
+    };
+
+    window.addEventListener('mousemove', resetTimer);
+    window.addEventListener('keydown', resetTimer);
+    window.addEventListener('click', resetTimer);
+    window.addEventListener('touchstart', resetTimer);
+
+    resetTimer(); // Iniciar temporizador al entrar
+  }
+
 }

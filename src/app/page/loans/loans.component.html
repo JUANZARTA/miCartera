@@ -2,9 +2,20 @@
   <div
     class="relative flex flex-col bg-white rounded-xl shadow-lg overflow-hidden xl:col-span-2 border border-gray-200">
 
+    <!-- Estado financiero -->
+    <div class="px-6 py-4 border-b flex center-end">
+      <span [ngClass]="{
+          'bg-red-600': estadoFinancieroColor === 'rojo',
+          'bg-blue-600': estadoFinancieroColor === 'azul',
+          'bg-green-600': estadoFinancieroColor === 'verde'
+        }" class="text-white text-sm font-semibold px-4 py-2 rounded-full shadow-md">
+        {{ estadoFinanciero }}
+      </span>
+    </div>
+
     <!-- Encabezado -->
     <div
-      class="flex items-center justify-between p-6 bg-gradient-to-r from-blue-700 to-teal-500 text-white rounded-t-xl shadow-md">
+      class="flex items-center justify-between p-6 bg-gradient-to-r from-sky-800 to-sky-800  text-white rounded-t-xl shadow-md">
       <div>
         <h6 class="text-xl font-bold tracking-wide">Préstamos</h6>
         <p class="text-sm flex items-center gap-2 opacity-90">
@@ -37,14 +48,22 @@
             <td class="py-4 px-6 text-center">
               <button (click)="togglePaymentStatus(loan)"
                 class="px-3 py-1 text-xs font-semibold rounded-full transition duration-300"
-                [ngClass]="loan.estado === 'Pagado' ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-red-500 text-white hover:bg-red-600'">
+                [ngClass]="loan.estado === 'Pagado' ? 'bg-sky-700 text-white hover:bg-slate-700' : 'bg-orange-600 text-white hover:bg-red-600'">
                 {{ loan.estado }}
               </button>
             </td>
             <td class="py-4 px-6 text-center">
-              <button (click)="openEditModal(loan.id)" class="text-blue-600 mr-2">✏️</button>
-              <button (click)="deleteLoan(loan.id)" class="text-red-600">🗑️</button>
+              <button (click)="openAddModal(loan.id)" class="text-lime-600 mr-2">
+                <span class="material-icons">add</span>
+              </button>
+              <button (click)="openEditModal(loan.id)" class="text-sky-700 mr-2">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button (click)="openDeleteModal(loan.id)" class="text-orange-600">
+                <mat-icon>delete</mat-icon>
+              </button>
             </td>
+
           </tr>
 
           <!-- Total Préstamos Pendientes -->
@@ -65,62 +84,100 @@
     <!-- Botón para agregar préstamo -->
     <div class="flex justify-end p-4">
       <button (click)="openModal()"
-        class="bg-blue-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-teal-500 transition">
+      class="bg-sky-700 text-white px-4 py-2 rounded-md shadow-md hover:bg-slate-700 transition">
         Agregar Préstamo +
       </button>
     </div>
 
     <!-- Modal para agregar préstamo -->
-    <div *ngIf="isModalOpen" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-      <div class="bg-white p-6 rounded-lg shadow-lg w-96">
-        <h2 class="text-xl font-bold mb-4">Agregar Nuevo Préstamo</h2>
+<div *ngIf="isModalOpen" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+    <h2 class="text-xl font-bold mb-4">Agregar Nuevo Préstamo</h2>
+    <p class="text-gray-600 mb-4 text-sm">Introduce los detalles del nuevo préstamo.</p>
 
-        <label class="block mb-2">Nombre Deudor:</label>
-        <input type="text" [(ngModel)]="newLoan.deudor" placeholder="Ejm: Juan Pérez"
-          class="w-full p-2 border rounded-md mb-3">
+    <label class="block mb-2">Nombre Deudor:</label>
+    <input type="text" [(ngModel)]="newLoan.deudor" placeholder="Ejm: Juan Pérez"
+      class="w-full p-2 border rounded-md mb-3">
 
-        <label class="block mb-2">Fecha de Préstamo:</label>
-        <input type="date" [(ngModel)]="newLoan.fecha_prestamo" class="w-full p-2 border rounded-md mb-3">
+    <label class="block mb-2">Fecha de Préstamo:</label>
+    <input type="date" [(ngModel)]="newLoan.fecha_prestamo" class="w-full p-2 border rounded-md mb-3">
 
-        <label class="block mb-2">Fecha de Pago:</label>
-        <input type="date" [(ngModel)]="newLoan.fecha_pago" class="w-full p-2 border rounded-md mb-3">
+    <label class="block mb-2">Fecha de Pago:</label>
+    <input type="date" [(ngModel)]="newLoan.fecha_pago" class="w-full p-2 border rounded-md mb-3">
 
-        <label class="block mb-2">Valor:</label>
-        <input type="text" [value]="formatCurrency(newLoan.valor)" (input)="onValueInput($event, 'new')"
-          placeholder="Ejm: 250.000" class="w-full p-2 border rounded-md mb-3">
+    <label class="block mb-2">Valor:</label>
+    <input type="text" [value]="formatCurrency(newLoan.valor)" (input)="onValueInput($event, 'new')"
+      placeholder="Ejm: 250.000" class="w-full p-2 border rounded-md mb-3">
 
-        <div class="flex justify-end gap-2">
-          <button (click)="closeModal()" class="px-4 py-2 border rounded-md">Cancelar</button>
-          <button (click)="addLoan()" class="px-4 py-2 bg-green-500 text-white rounded-md">Agregar</button>
-        </div>
-      </div>
+    <div class="flex justify-end gap-2">
+      <button (click)="closeModal()" class="px-4 py-2 border rounded-md bg-white-700 hover:bg-slate-200">Cancelar</button>
+      <button (click)="addLoan()" class="px-4 py-2 bg-sky-700 text-white rounded-md hover:bg-slate-700">Agregar</button>
     </div>
+  </div>
+</div>
 
-    <!-- Modal para editar préstamo -->
-    <div *ngIf="isEditModalOpen" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-      <div class="bg-white p-6 rounded-lg shadow-lg w-96">
-        <h2 class="text-xl font-bold mb-4">Editar Préstamo</h2>
+<!-- Modal para agregar valor al préstamo -->
+<div *ngIf="isAddValueModalOpen" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-80">
+    <h2 class="text-xl font-bold mb-2">Agregar o Restar Valor</h2>
+    <p class="text-gray-600 mb-4 text-sm">Introduce un valor para adicionar o restar a este préstamo.</p>
 
-        <label class="block mb-2">Nombre Deudor:</label>
-        <input type="text" [(ngModel)]="editedLoan.deudor" placeholder="Ejm: Juan Pérez"
-          class="w-full p-2 border rounded-md mb-3">
+    <label class="block mb-2 font-semibold">Valor:</label>
+    <input
+      type="text"
+      [value]="formatCurrency(newValue)"
+      (input)="onValueInput($event, 'add')"
+      placeholder="Ej: 5000"
+      class="w-full p-2 border rounded-md mb-4" />
 
-        <label class="block mb-2">Fecha de Préstamo:</label>
-        <input type="date" [(ngModel)]="editedLoan.fecha_prestamo" class="w-full p-2 border rounded-md mb-3">
-
-        <label class="block mb-2">Fecha de Pago:</label>
-        <input type="date" [(ngModel)]="editedLoan.fecha_pago" class="w-full p-2 border rounded-md mb-3">
-
-        <label class="block mb-2">Valor:</label>
-        <input type="text" [value]="formatCurrency(editedLoan.valor)" (input)="onValueInput($event, 'edit')"
-          placeholder="Ejm: 350.000" class="w-full p-2 border rounded-md mb-3">
-
-        <div class="flex justify-end gap-2">
-          <button (click)="closeEditModal()" class="px-4 py-2 border rounded-md">Cancelar</button>
-          <button (click)="saveEditedLoan()" class="px-4 py-2 bg-green-500 text-white rounded-md">Guardar</button>
-        </div>
-      </div>
+    <div class="flex justify-end gap-2">
+      <button (click)="closeAddValueModal()" class="px-4 py-2 border rounded-md bg-white-700 hover:bg-slate-200">Cancelar</button>
+      <button (click)="applyValue('subtract')" class="px-4 py-2 bg-sky-700 text-white rounded-md hover:bg-slate-700">Restar</button>
+      <button (click)="applyValue('add')" class="px-4 py-2 bg-teal-700 text-white rounded-md hover:bg-emerald-800">Sumar</button>
     </div>
+  </div>
+</div>
 
+<!-- Modal para editar préstamo -->
+<div *ngIf="isEditModalOpen" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+    <h2 class="text-xl font-bold mb-4">Editar Préstamo</h2>
+    <p class="text-gray-600 mb-4 text-sm">Edita los detalles del préstamo.</p>
+
+    <label class="block mb-2">Nombre Deudor:</label>
+    <input type="text" [(ngModel)]="editedLoan.deudor" placeholder="Ejm: Juan Pérez"
+      class="w-full p-2 border rounded-md mb-3">
+
+    <label class="block mb-2">Fecha de Préstamo:</label>
+    <input type="date" [(ngModel)]="editedLoan.fecha_prestamo" class="w-full p-2 border rounded-md mb-3">
+
+    <label class="block mb-2">Fecha de Pago:</label>
+    <input type="date" [(ngModel)]="editedLoan.fecha_pago" class="w-full p-2 border rounded-md mb-3">
+
+    <label class="block mb-2">Valor:</label>
+    <input type="text" [value]="formatCurrency(editedLoan.valor)" (input)="onEditValueInput($event)"
+      placeholder="Ejm: 350.000" class="w-full p-2 border rounded-md mb-3">
+
+    <div class="flex justify-end gap-2">
+      <button (click)="closeEditModal()" class="px-4 py-2 border rounded-md bg-white-700 hover:bg-slate-200">Cancelar</button>
+      <button (click)="saveEditedLoan()" class="px-4 py-2 bg-sky-700 text-white rounded-md hover:bg-slate-700">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para eliminar préstamo -->
+<div *ngIf="isDeleteModalOpen" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-80 text-center">
+    <span class="material-icons text-red-600 mx-auto mb-4" style="font-size: 48px;">
+      report_problem
+    </span>
+    <h2 class="text-xl font-bold mt-4 mb-2">¿Eliminar Préstamo?</h2>
+    <p class="mb-6 text-gray-700">¿Estás seguro de que deseas eliminar este préstamo? Esta acción no se puede deshacer.</p>
+    <div class="flex justify-center gap-2">
+      <button (click)="closeDeleteModal()" class="px-4 py-2 border rounded-md bg-white-700 hover:bg-orange-200">Cancelar</button>
+      <button (click)="confirmDeleteLoan()" class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-red-600">
+        Eliminar
+      </button>
+    </div>
   </div>
 </div>
