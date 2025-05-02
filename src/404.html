@@ -1,5 +1,4 @@
 <script>
-  // Redirige cualquier ruta 404 a index.html conservando la ruta original
-  var pathname = window.location.pathname;
-  window.location.replace('/miCartera/index.html?redirect=' + pathname);
+  var path = window.location.pathname;
+  window.location.replace("/miCartera/index.html?redirect=" + path);
 </script>

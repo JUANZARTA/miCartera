@@ -16,12 +16,10 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     const params = new URLSearchParams(window.location.search);
     const redirect = params.get('redirect');
-
     if (redirect) {
-      // Actualiza la URL sin recargar la página
       window.history.replaceState({}, '', redirect);
-      // Opcional: Fuerza la navegación dentro de Angular si quieres que el componente se monte de inmediato
       this.router.navigateByUrl(redirect);
     }
   }
+
 }
