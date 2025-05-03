@@ -195,7 +195,9 @@ export class AuthService {
       clearTimeout(timer);
       timer = setTimeout(() => {
         this.logout();
-        window.location.href = '/auth/login'; // Redirigir al login
+        // window.location.href = '/miCartera/login'; // Redirigir al login
+        window.location.href = `${document.baseURI}login`;
+
       }, 2 * 60 * 1000); // 2 minutos
     };
 
