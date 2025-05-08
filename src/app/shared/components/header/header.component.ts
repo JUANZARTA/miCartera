@@ -22,7 +22,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   selectedYear: number | null = null;
   selectedMonth: number | null = null;
-
+  isDarkMode = false;
   currentYear: string = '';
   currentMonth: string = '';
   currentRoute: string = '';
