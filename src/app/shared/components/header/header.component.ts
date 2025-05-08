@@ -35,9 +35,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   private dateSubscription?: Subscription;
   private routeSubscription?: Subscription;
-  private authService = inject(AuthService);
 
-  constructor(private dateService: DateService, private router: Router) {}
+  constructor(private dateService: DateService, private router: Router,  private authService: AuthService ) {}
 
   ngOnInit(): void {
     this.generateYearRange(2025, 2050);
@@ -139,6 +138,23 @@ export class HeaderComponent implements OnInit, OnDestroy {
     return value.charAt(0).toUpperCase() + value.slice(1);
   }
 
+  toggleDarkMode(): void {
+    this.isDarkMode = !this.isDarkMode;
+
+    const htmlElement = document.documentElement;
+    if (this.isDarkMode) {
+      htmlElement.classList.add('dark');
+      localStorage.setItem('darkMode', 'true');
+    } else {
+      htmlElement.classList.remove('dark');
+      localStorage.setItem('darkMode', 'false');
+    }
+  }
+
+  logout(): void {
+    this.authService.logout(); // asegúrate de que este método exista
+    this.router.navigate(['/auth/login']); // o la ruta a tu pantalla de login
+  }
   // 📩 NOTIFICACIONES
 
   toggleNotifications(): void {
