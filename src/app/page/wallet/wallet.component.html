@@ -23,7 +23,7 @@
       <h3 class="text-sm font-bold text-gray-800">{{ account.tipo }}</h3> <!-- Nombre en bold -->
 
       <!-- Menú de acciones -->
-      <div class="relative">
+      <div class="relative wallet-menu-toggle">
         <!-- Botón principal -->
         <button (click)="toggleMenu(account)"
           class="text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-gray-100" type="button">
@@ -146,14 +146,32 @@
       </option>
     </select>
 
-    <!-- Valor a transferir -->
-    <label class="block mb-2 font-medium">Valor a asignar:</label>
-    <input type="text" [value]="formatCurrency(assignedValue || 0)" (input)="onAssignedValueInput($event)"
-      placeholder="Ej: 50,000" class="app-input mb-1" />
+    <!-- Modo de transferencia -->
+    <label class="block mb-2 font-medium">Valor a mover:</label>
+    <div class="flex gap-4 mb-3 text-sm">
+      <label class="flex items-center gap-2 cursor-pointer">
+        <input type="radio" name="transferMode" value="all" [(ngModel)]="transferMode" />
+        Todo el valor
+      </label>
+      <label class="flex items-center gap-2 cursor-pointer">
+        <input type="radio" name="transferMode" value="custom" [(ngModel)]="transferMode" />
+        Otro valor
+      </label>
+    </div>
 
+    <!-- Valor a transferir (solo si eligió "Otro valor") -->
+    <ng-container *ngIf="transferMode === 'custom'">
+      <label class="block mb-2 font-medium">Valor a asignar:</label>
+      <input type="text" [value]="formatCurrency(assignedValue || 0)" (input)="onAssignedValueInput($event)"
+        placeholder="Ej: 50,000" class="app-input mb-1" />
 
-    <p class="text-xs text-gray-500 mb-4">
-      Valor mínimo $0, máximo ${{ formatCurrency(sourceWallet?.valor || 0) }}
+      <p class="text-xs text-gray-500 mb-4">
+        Valor mínimo $0, máximo ${{ formatCurrency(sourceWallet?.valor || 0) }}
+      </p>
+    </ng-container>
+
+    <p *ngIf="transferMode === 'all'" class="text-sm text-gray-600 mb-4">
+      Se moverá todo el saldo: <strong>${{ formatCurrency(sourceWallet?.valor || 0) }}</strong>
     </p>
 
     <!-- Botones -->

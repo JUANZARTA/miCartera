@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, OnDestroy } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WalletService } from '../../services/wallet.service';
@@ -68,6 +68,7 @@ export default class WalletComponent implements OnInit, OnDestroy {
   isTransactionModalOpen = false;
   selectedWallet = '';
   assignedValue: number | null = null;
+  transferMode: 'all' | 'custom' = 'all';
   totalDisponible = 20000; // Valor quemado por ahora
 
   // Variables para manejar el estado de los modales
@@ -406,6 +407,7 @@ export default class WalletComponent implements OnInit, OnDestroy {
     this.sourceWallet = this.wallet.find((a) => a.id === accountId);
     this.selectedWallet = '';
     this.assignedValue = null;
+    this.transferMode = 'all';
     this.isTransactionModalOpen = true;
   }
 
@@ -418,24 +420,27 @@ export default class WalletComponent implements OnInit, OnDestroy {
       alert('Selecciona la cuenta destino.');
       return;
     }
-    if (!this.assignedValue || this.assignedValue <= 0) {
-      alert('Ingresa un valor válido.');
-      return;
-    }
 
     const destination = this.wallet.find((a) => a.id === this.selectedWallet);
     const source = this.sourceWallet;
 
     if (!source || !destination) return;
 
-    if (this.assignedValue > source.valor) {
+    // "Todo el valor" mueve el saldo completo de la cuenta origen; "Otro valor" usa lo que se tipeó.
+    const amount = this.transferMode === 'all' ? source.valor : this.assignedValue;
+
+    if (!amount || amount <= 0) {
+      alert('Ingresa un valor válido.');
+      return;
+    }
+    if (amount > source.valor) {
       alert('El valor supera el saldo disponible de la cuenta origen.');
       return;
     }
 
     // Actualizar valores localmente
-    source.valor -= this.assignedValue;
-    destination.valor += this.assignedValue;
+    source.valor -= amount;
+    destination.valor += amount;
 
     // Actualizar en backend
     this.walletService
@@ -493,10 +498,19 @@ export default class WalletComponent implements OnInit, OnDestroy {
 
   // Metodo para alternar al menu de opciones de cada cuenta
   toggleMenu(account: any) {
+    const wasOpen = account.showMenu;
     // Cierra cualquier otro menú abierto
     this.wallet.forEach((a: any) => (a.showMenu = false));
     // Alterna el menú actual
-    account.showMenu = !account.showMenu;
+    account.showMenu = !wasOpen;
+  }
+
+  // Cierra cualquier menú de acciones abierto si el click fue fuera de él
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (target.closest('.wallet-menu-toggle')) return;
+    this.wallet.forEach((a: any) => (a.showMenu = false));
   }
 
   // Metodo para obtener el delay de la animcacion de cada indice
