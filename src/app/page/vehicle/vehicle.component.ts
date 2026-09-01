@@ -220,15 +220,23 @@ export default class VehicleComponent implements OnInit, AfterViewInit, OnDestro
       alert('Completa descripción y valor.');
       return;
     }
+    if (!this.selectedWalletForVehicleExp) {
+      alert('Selecciona una billetera para descontar el gasto.');
+      return;
+    }
+    const wallet = this.wallets.find(w => w.id === this.selectedWalletForVehicleExp);
+    if (!wallet) {
+      alert('La billetera seleccionada no existe.');
+      return;
+    }
+    if (wallet.valor < this.newVehicleExp.valor) {
+      alert('Saldo insuficiente en la billetera seleccionada.');
+      return;
+    }
     const expense = new Expense(this.newVehicleExp.descripcion, 'Vehículo', this.newVehicleExp.valor, this.newVehicleExp.estimacion);
     this.expenseService.addExpense(this.userId, this.currentYear, this.currentMonth, expense).subscribe(() => {
-      if (this.selectedWalletForVehicleExp) {
-        const wallet = this.wallets.find(w => w.id === this.selectedWalletForVehicleExp);
-        if (wallet && wallet.valor >= this.newVehicleExp.valor) {
-          const updated = { tipo: wallet.tipo, valor: wallet.valor - this.newVehicleExp.valor };
-          this.walletService.updateAccount(this.userId, this.currentYear, this.currentMonth, wallet.id, updated).subscribe(() => this.loadWallets());
-        }
-      }
+      const updated = { tipo: wallet.tipo, valor: wallet.valor - this.newVehicleExp.valor };
+      this.walletService.updateAccount(this.userId, this.currentYear, this.currentMonth, wallet.id, updated).subscribe(() => this.loadWallets());
       this.closeVehicleExpModal();
       this.loadGasolinaAndVehicleExpenses();
     });
@@ -250,6 +258,20 @@ export default class VehicleComponent implements OnInit, AfterViewInit, OnDestro
 
   applyVehicleExpValue(action: 'add' | 'subtract'): void {
     if (!this.vehicleExpAddValTarget || this.vehicleExpAddVal <= 0) return;
+    if (!this.selectedWalletForVehicleExpAdd) {
+      alert('Selecciona una billetera para descontar el gasto.');
+      return;
+    }
+    const wallet = this.wallets.find(w => w.id === this.selectedWalletForVehicleExpAdd);
+    if (!wallet) {
+      alert('La billetera seleccionada no existe.');
+      return;
+    }
+    if (action === 'add' && wallet.valor < this.vehicleExpAddVal) {
+      alert('Saldo insuficiente en la billetera seleccionada.');
+      return;
+    }
+
     const exp = this.vehicleExpAddValTarget;
     const newValor = action === 'add'
       ? exp.valor + this.vehicleExpAddVal
@@ -257,14 +279,9 @@ export default class VehicleComponent implements OnInit, AfterViewInit, OnDestro
 
     const updated = new Expense(exp.descripcion, exp.categoria, newValor, exp.estimacion);
     this.expenseService.updateExpense(this.userId, this.currentYear, this.currentMonth, exp.id, updated).subscribe(() => {
-      if (this.selectedWalletForVehicleExpAdd) {
-        const wallet = this.wallets.find(w => w.id === this.selectedWalletForVehicleExpAdd);
-        if (wallet) {
-          const delta = action === 'add' ? -this.vehicleExpAddVal : this.vehicleExpAddVal;
-          const updatedWallet = { tipo: wallet.tipo, valor: wallet.valor + delta };
-          this.walletService.updateAccount(this.userId, this.currentYear, this.currentMonth, wallet.id, updatedWallet).subscribe(() => this.loadWallets());
-        }
-      }
+      const delta = action === 'add' ? -this.vehicleExpAddVal : this.vehicleExpAddVal;
+      const updatedWallet = { tipo: wallet.tipo, valor: wallet.valor + delta };
+      this.walletService.updateAccount(this.userId, this.currentYear, this.currentMonth, wallet.id, updatedWallet).subscribe(() => this.loadWallets());
       this.closeVehicleExpAddValModal();
       this.loadGasolinaAndVehicleExpenses();
     });
@@ -566,6 +583,18 @@ export default class VehicleComponent implements OnInit, AfterViewInit, OnDestro
       return prev ? Math.max(0, this.entries[0].kilometraje - prev.kilometraje) : 0;
     }
     return Math.max(0, this.entries[index].kilometraje - this.entries[index - 1].kilometraje);
+  }
+
+  /**
+   * Rendimiento a mostrar en la fila `index` de la tabla: la distancia que se recorrió
+   * CON el tanque cargado en esa fila, es decir, hasta el próximo registro. Se calcula
+   * recién cuando existe ese próximo registro — si `index` es la última fila (el tanqueo
+   * más reciente), todavía no hay con qué compararlo y se muestra vacío.
+   */
+  getRendimientoForRow(index: number): number {
+    const next = this.entries[index + 1];
+    if (!next) return 0;
+    return Math.max(0, next.kilometraje - this.entries[index].kilometraje);
   }
 
   getDaysFromPrevious(index: number): number {

@@ -94,7 +94,7 @@
         <td class="py-2 px-3 sm:px-4 text-right">${{ formatCurrency(item.monto) }}</td>
         <td class="py-2 px-3 sm:px-4 text-right">{{ formatNumber(item.galones) }}</td>
         <td class="py-2 px-3 sm:px-4 text-right">{{ formatCurrency(item.kilometraje) }}</td>
-        <td class="py-2 px-3 sm:px-4 text-right">{{ !item.esReferencia && getDistanceFromPrevious(i) > 0 ? formatCurrency(getDistanceFromPrevious(i)) + ' km' : '—' }}</td>
+        <td class="py-2 px-3 sm:px-4 text-right">{{ getRendimientoForRow(i) > 0 ? formatCurrency(getRendimientoForRow(i)) + ' km' : '—' }}</td>
         <td class="py-2 px-3 sm:px-4 text-center">
           <ng-container *ngIf="!item.esReferencia">
             <button (click)="openEditModal(item.id)" class="text-sky-700 mr-2"><span class="material-icons">edit</span></button>
