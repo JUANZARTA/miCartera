@@ -20,6 +20,40 @@
   </div>
 </div>
 
+<!-- Filtros de la tabla -->
+<div class="app-section-card mb-4 animate-fadeSlideDown relative z-30">
+  <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+    <input type="text" [(ngModel)]="filterSearch" placeholder="Buscar por nombre..."
+      class="app-input flex-1 min-w-[160px]" />
+
+    <!-- Filtro rápido por categoría -->
+    <div class="relative expense-category-filter">
+      <button (click)="toggleCategoryFilter()" type="button"
+        class="app-secondary-button whitespace-nowrap w-full sm:w-auto justify-between">
+        {{ filterCategoria || 'Categoría' }}
+        <span class="material-icons text-sm align-middle ml-1">expand_more</span>
+      </button>
+      <div *ngIf="showCategoryFilter" class="app-menu-panel">
+        <button (click)="setFilterCategoria('')" type="button" class="app-menu-item"
+          [class.font-bold]="!filterCategoria">Todas</button>
+        <button *ngFor="let c of categorias" (click)="setFilterCategoria(c)" type="button" class="app-menu-item"
+          [class.font-bold]="filterCategoria === c">{{ c }}</button>
+      </div>
+    </div>
+
+    <select [(ngModel)]="filterComparativo" class="app-input sm:w-56">
+      <option value="">Gastado vs. estimación</option>
+      <option value="over">Gastado &gt; estimación</option>
+      <option value="under">Gastado ≤ estimación</option>
+    </select>
+
+    <button *ngIf="hasActiveFilters" (click)="clearFilters()" type="button"
+      class="app-link-button text-sm whitespace-nowrap">
+      Limpiar filtros
+    </button>
+  </div>
+</div>
+
 <!-- Tabla de Gastos en una sola tabla -->
 <div class="overflow-x-auto">
   <table class="app-table app-table-bordered">
@@ -36,6 +70,11 @@
       </tr>
     </thead>
     <tbody>
+      <tr *ngIf="sortedExpenses.length === 0">
+        <td [attr.colspan]="selectionMode ? 6 : 5" class="py-4 px-3 sm:px-4 text-center text-sm text-slate-500">
+          Ningún gasto coincide con el filtro.
+        </td>
+      </tr>
       <tr *ngFor="let expense of sortedExpenses; let i = index"
         class="app-table-row opacity-0 animate-fadeSlideDown" [style.animationDelay]="0.1 + i * 0.05 + 's'"
         appLongPress (longPress)="activateSelection(expense.id)">

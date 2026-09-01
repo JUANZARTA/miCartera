@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, OnDestroy } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -133,14 +133,62 @@ export default class ExpenseComponent implements OnInit, OnDestroy {
 
   private readonly categoryOrder = Object.values(CategoriaGasto);
 
+  // Filtros de la tabla (no afectan Totales Generales, que siempre suma todo el mes)
+  filterSearch = '';
+  filterCategoria = '';
+  filterComparativo: '' | 'over' | 'under' = '';
+  showCategoryFilter = false;
+
+  get hasActiveFilters(): boolean {
+    return !!this.filterSearch.trim() || !!this.filterCategoria || !!this.filterComparativo;
+  }
+
+  toggleCategoryFilter(): void {
+    this.showCategoryFilter = !this.showCategoryFilter;
+  }
+
+  setFilterCategoria(categoria: string): void {
+    this.filterCategoria = categoria;
+    this.showCategoryFilter = false;
+  }
+
+  clearFilters(): void {
+    this.filterSearch = '';
+    this.filterCategoria = '';
+    this.filterComparativo = '';
+  }
+
+  // Cierra el desplegable de categoría al hacer clic afuera
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.expense-category-filter')) {
+      this.showCategoryFilter = false;
+    }
+  }
+
+  private matchesFilters(expense: ExpenseWithId): boolean {
+    if (this.filterCategoria && expense.categoria !== this.filterCategoria) return false;
+
+    const query = this.filterSearch.trim().toLowerCase();
+    if (query && !expense.descripcion.toLowerCase().includes(query)) return false;
+
+    if (this.filterComparativo === 'over' && !(Number(expense.valor) > Number(expense.estimacion))) return false;
+    if (this.filterComparativo === 'under' && !(Number(expense.valor) <= Number(expense.estimacion))) return false;
+
+    return true;
+  }
+
   get sortedExpenses() {
-    return [...this.expenses].sort((a, b) => {
-      const ai = this.categoryOrder.indexOf(a.categoria as CategoriaGasto);
-      const bi = this.categoryOrder.indexOf(b.categoria as CategoriaGasto);
-      const aIdx = ai === -1 ? this.categoryOrder.length : ai;
-      const bIdx = bi === -1 ? this.categoryOrder.length : bi;
-      return aIdx - bIdx || a.descripcion.localeCompare(b.descripcion);
-    });
+    return this.expenses
+      .filter(e => this.matchesFilters(e))
+      .sort((a, b) => {
+        const ai = this.categoryOrder.indexOf(a.categoria as CategoriaGasto);
+        const bi = this.categoryOrder.indexOf(b.categoria as CategoriaGasto);
+        const aIdx = ai === -1 ? this.categoryOrder.length : ai;
+        const bIdx = bi === -1 ? this.categoryOrder.length : bi;
+        return aIdx - bIdx || a.descripcion.localeCompare(b.descripcion);
+      });
   }
 
   // Variables para el gráfico
