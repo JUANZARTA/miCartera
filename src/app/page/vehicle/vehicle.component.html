@@ -74,7 +74,8 @@
         </th>
         <th class="text-left py-2 px-3 sm:px-4">Bomba</th>
         <th class="text-right py-2 px-3 sm:px-4">Cantidad $</th>
-        <th class="text-right py-2 px-3 sm:px-4">Gasolina (gal)</th>
+        <th class="text-right py-2 px-3 sm:px-4">Galón</th>
+        <th class="text-right py-2 px-3 sm:px-4">Litros</th>
         <th class="text-right py-2 px-3 sm:px-4">Kilometraje</th>
         <th class="text-right py-2 px-3 sm:px-4">Rendimiento KM</th>
         <th class="text-center py-2 px-3 sm:px-4">Acciones</th>
@@ -93,6 +94,7 @@
         </td>
         <td class="py-2 px-3 sm:px-4 text-right">${{ formatCurrency(item.monto) }}</td>
         <td class="py-2 px-3 sm:px-4 text-right">{{ formatNumber(item.galones) }}</td>
+        <td class="py-2 px-3 sm:px-4 text-right">{{ formatNumber(toLitros(item.galones)) }}</td>
         <td class="py-2 px-3 sm:px-4 text-right">{{ formatCurrency(item.kilometraje) }}</td>
         <td class="py-2 px-3 sm:px-4 text-right">{{ getRendimientoForRow(i) > 0 ? formatCurrency(getRendimientoForRow(i)) + ' km' : '—' }}</td>
         <td class="py-2 px-3 sm:px-4 text-center">

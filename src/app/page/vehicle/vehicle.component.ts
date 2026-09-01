@@ -83,7 +83,7 @@ export default class VehicleComponent implements OnInit, AfterViewInit, OnDestro
   vehicleExpAddVal = 0;
   selectedWalletForVehicleExpAdd = '';
 
-  chartType: ChartType = 'rendimiento';
+  chartType: ChartType = 'kmGalon';
   showChartMenu = false;
 
   readonly chartOptions: { key: ChartType; label: string; icon: string }[] = [
@@ -140,7 +140,8 @@ export default class VehicleComponent implements OnInit, AfterViewInit, OnDestro
     this.vehicleService.getFuelEntries(this.userId, this.currentYear, this.currentMonth).subscribe((data) => {
       this.entries = Object.entries(data || {})
         .map(([id, item]: [string, any]) => ({ id, ...item }))
-        .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
+        // Orden de ingreso (tal cual quedó en la base), con la referencia siempre arriba.
+        .sort((a, b) => (a.esReferencia === b.esReferencia) ? 0 : (a.esReferencia ? -1 : 1));
     });
     this.loadGasolinaAndVehicleExpenses();
   }
@@ -615,6 +616,9 @@ export default class VehicleComponent implements OnInit, AfterViewInit, OnDestro
     return gallons > 0 ? distance / gallons : 0;
   }
 
+  // 1 galón (US) = 3.78541 litros
+  toLitros(galones: number): number { return (galones || 0) * 3.78541; }
+
   formatCurrency(v: number): string { return this.decimalPipe.transform(v, '1.0-0') || ''; }
   formatNumber(v: number): string { return this.decimalPipe.transform(v, '1.1-2') || ''; }
   formatCurrencyInput(v: number): string { return v ? this.formatCurrency(v) : ''; }
@@ -660,7 +664,8 @@ export default class VehicleComponent implements OnInit, AfterViewInit, OnDestro
     this.vehicleService.getFuelEntries(this.userId, this.currentYear, this.currentMonth).subscribe((data) => {
       this.entries = Object.entries(data || {})
         .map(([id, item]: [string, any]) => ({ id, ...item }))
-        .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
+        // Orden de ingreso (tal cual quedó en la base), con la referencia siempre arriba.
+        .sort((a, b) => (a.esReferencia === b.esReferencia) ? 0 : (a.esReferencia ? -1 : 1));
       const total = this.entries.filter(e => !e.esReferencia).reduce((sum, e) => sum + (e.monto || 0), 0);
       this.syncGasolinaExpense(total);
     });
@@ -710,12 +715,16 @@ export default class VehicleComponent implements OnInit, AfterViewInit, OnDestro
       return d.toLocaleDateString('es', { day: '2-digit', month: 'short', year: '2-digit' });
     });
 
+    // Adelante, no atrás: la distancia/días de la fila i son los que se recorrieron CON el
+    // tanque cargado en i, es decir hasta el próximo registro (mismo criterio que la tabla
+    // de tanqueos). Antes restaba contra la fila anterior y emparejaba mal cada tanque con
+    // un recorrido que no era el suyo.
     const getDist = (i: number) =>
-      i === 0 ? 0 : Math.max(0, src[i].kilometraje - src[i - 1].kilometraje);
+      i === src.length - 1 ? 0 : Math.max(0, src[i + 1].kilometraje - src[i].kilometraje);
 
     const getDays = (i: number) => {
-      if (i === 0) return 0;
-      const diff = new Date(src[i].fecha).getTime() - new Date(src[i - 1].fecha).getTime();
+      if (i === src.length - 1) return 0;
+      const diff = new Date(src[i + 1].fecha).getTime() - new Date(src[i].fecha).getTime();
       return Math.max(0, Math.round(diff / 86400000));
     };
 
@@ -796,13 +805,41 @@ export default class VehicleComponent implements OnInit, AfterViewInit, OnDestro
       }
     }
 
+    // Dibuja el valor de cada punto arriba de la línea, sin depender de un plugin externo
+    // (chartjs-plugin-datalabels no está instalado) — así se ve de un vistazo cómo se
+    // comporta la gráfica sin tener que pasar el mouse por cada tanqueo.
+    const valueAboveLine = {
+      id: 'valueAboveLine',
+      afterDatasetsDraw: (chart: Chart) => {
+        const { ctx } = chart;
+        chart.data.datasets.forEach((dataset: any, datasetIndex: number) => {
+          if (dataset.pointRadius === 0) return; // no marcar líneas de referencia (ej. presupuesto)
+          const meta = chart.getDatasetMeta(datasetIndex);
+          ctx.save();
+          ctx.fillStyle = textColor;
+          ctx.font = '11px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          meta.data.forEach((point: any, index: number) => {
+            const raw = dataset.data[index];
+            if (raw === null || raw === undefined) return;
+            const text = Number.isInteger(raw) ? String(raw) : (raw as number).toFixed(1);
+            ctx.fillText(text, point.x, point.y - 6);
+          });
+          ctx.restore();
+        });
+      },
+    };
+
     this.chart?.destroy();
     this.chart = new Chart(this.vehicleChartRef.nativeElement, {
       type: 'line',
       data: { labels, datasets },
+      plugins: [valueAboveLine],
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        layout: { padding: { top: 16 } },
         plugins: { legend: { labels: { color: textColor } } },
         scales: {
           x: { ticks: { color: textColor }, grid: { color: gridColor } },
