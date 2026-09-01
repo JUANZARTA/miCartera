@@ -2,7 +2,6 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, forkJoin, from, of } from 'rxjs';
 import { switchMap, map, catchError } from 'rxjs/operators';
-import { jsPDF } from 'jspdf';
 import { AuthService } from './auth.service';
 import { WalletService } from './wallet.service';
 import { ExpenseService } from './expense.service';
@@ -308,6 +307,11 @@ export class MonthlyCloseService {
   }
 
   async downloadPdf(snapshot: MonthlyCloseSnapshot): Promise<void> {
+    // Import dinámico: jsPDF (y sus dependencias pesadas: html2canvas, canvg, dompurify) solo
+    // se cargan cuando el usuario realmente pide el PDF. Este service lo inyectan LayoutComponent
+    // y PendingCloseGuard en TODAS las pantallas de /app — un import estático arriba del archivo
+    // metía jsPDF entero en el bundle inicial y hacía fallar el budget de producción.
+    const { jsPDF } = await import('jspdf');
     const safePeriod = this.sanitizeFilePart(snapshot?.period || 'periodo');
     const t = snapshot?.totals ?? { income: 0, expense: 0, net: 0, debtPending: 0 };
 
